@@ -1,0 +1,171 @@
+ void _showSliderDialog(BuildContext context) {
+    // Get the current from and to dates
+    DateTime fromDate = widget.todo.from;
+    DateTime toDate = widget.todo.to;
+
+    // Calculate the total duration between from and to dates
+    Duration totalDuration = toDate.difference(fromDate);
+
+    // Calculate the maximum slider value based on the total duration in days
+    double maxSliderValue = totalDuration.inDays.toDouble();
+
+    // Calculate initial slider values
+    double initialFromSliderValue = 0.0;
+    double initialToSliderValue = maxSliderValue;
+
+    // Update initial slider values based on current from and to dates
+    if (totalDuration.inDays > 0) {
+      initialFromSliderValue =
+          widget.todo.from.difference(fromDate).inDays.toDouble();
+      initialToSliderValue =
+          widget.todo.to.difference(fromDate).inDays.toDouble();
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text('Adjust Dates'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                      'From Date: ${DateFormat('dd-MM-yyyy').format(fromDate)}'),
+                  Slider(
+                    min: 0.0,
+                    max: maxSliderValue,
+                    value: _fromSliderValue.clamp(0.0, maxSliderValue),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _fromSliderValue = newValue.clamp(0.0, maxSliderValue);
+                        // Calculate the new from date based on the slider value
+                        DateTime newFromDate = fromDate
+                            .add(Duration(days: _fromSliderValue.toInt()));
+                        // Ensure that the new from date is before the current to date
+                        if (newFromDate.isBefore(toDate)) {
+                          // Update the from date of the todo item
+                          widget.onUpdateTargetDate(newFromDate);
+                          // Update the to slider value if necessary
+                          if (_toSliderValue < _fromSliderValue) {
+                            _toSliderValue = _fromSliderValue;
+                          }
+                        }
+                      });
+                    },
+                  ),
+                  Text('To Date: ${DateFormat('dd-MM-yyyy').format(toDate)}'),
+                  Slider(
+                    min: 0.0,
+                    max: maxSliderValue,
+                    value: _toSliderValue.clamp(0.0, maxSliderValue),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _toSliderValue = newValue.clamp(0.0, maxSliderValue);
+                        // Calculate the new to date based on the slider value
+                        DateTime newToDate = fromDate
+                            .add(Duration(days: _toSliderValue.toInt()));
+                        // Ensure that the new to date is after the current from date
+                        if (newToDate.isAfter(fromDate)) {
+                          // Update the to date of the todo item
+                          widget.onToUpdateTargetDate(newToDate);
+                          // Update the from slider value if necessary
+                          if (_fromSliderValue > _toSliderValue) {
+                            _fromSliderValue = _toSliderValue;
+                          }
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Close'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+
+proper code
+
+void _showSliderDialog(BuildContext context) {
+  // Get the current from and to dates
+  DateTime fromDate = widget.todo.from;
+  DateTime toDate = widget.todo.to;
+
+  // Calculate the maximum slider value based on the difference between from and to dates
+  double maxSliderValue = toDate.difference(fromDate).inDays.toDouble();
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return AlertDialog(
+            title: Text('Adjust Dates'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        DateFormat('MMM d').format(fromDate),
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      Text(
+                        DateFormat('MMM d').format(toDate),
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                RangeSlider(
+                  min: 0.0,
+                  max: maxSliderValue,
+                  values: RangeValues(_fromSliderValue, _toSliderValue),
+                  onChanged: (RangeValues newValues) {
+                    setState(() {
+                      // Update the from and to slider values
+                      _fromSliderValue = newValues.start.clamp(0.0, maxSliderValue);
+                      _toSliderValue = newValues.end.clamp(0.0, maxSliderValue);
+
+                      // Calculate the new from and to dates based on the slider values
+                      DateTime newFromDate = fromDate.add(Duration(days: _fromSliderValue.toInt()));
+                      DateTime newToDate = fromDate.add(Duration(days: _toSliderValue.toInt()));
+
+                      // Update the from and to dates of the todo item
+                      widget.onUpdateTargetDate(newFromDate);
+                      widget.onToUpdateTargetDate(newToDate);
+                    });
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}

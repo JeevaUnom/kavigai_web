@@ -1,0 +1,559 @@
+// ignore_for_file: file_names
+
+import 'package:flutter/material.dart';
+import '../components/navbar.dart'; // Import the NavBar file
+import 'package:intl/intl.dart';
+
+class HomePage extends StatefulWidget {
+  // ignore: use_key_in_widget_constructors
+  const HomePage({Key? key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _todoController = TextEditingController();
+  final List<TodoItem> _todos = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home Page'),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Add the NavBar at the top of the Page
+          const NavBar(),
+
+          Expanded(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _todoController,
+                          decoration: const InputDecoration(
+                            hintText: 'Enter a new task',
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: () => setState(() {
+                                _todos.add(TodoItem(
+                                  _todoController.text,
+                                  targetDate: DateTime.now(),
+                                ));
+                                _todoController.clear();
+                              }))
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ReorderableListView(
+                    onReorder: (oldIndex, newIndex) {
+                      setState(() {
+                        if (oldIndex < newIndex) {
+                          newIndex -= 1;
+                        }
+                        final TodoItem item = _todos.removeAt(oldIndex);
+                        _todos.insert(newIndex, item);
+                      });
+                    },
+                    children: _todos
+                        .asMap()
+                        .map((index, todo) => MapEntry(
+                              index,
+                              TodoListItem(
+                                key: ValueKey(todo),
+                                todo: todo,
+                                serialNumber: index + 1,
+                                onDelete: () {
+                                  setState(() {
+                                    _todos.removeAt(index);
+                                  });
+                                },
+                                onUpdate: (String newText) {
+                                  setState(() {
+                                    _todos[index].text = newText;
+                                  });
+                                },
+                                onToggleStatus: () {
+                                  setState(() {
+                                    _todos[index].toggleStatus();
+                                  });
+                                },
+                                onUpdateTargetDate: (DateTime newDate) {
+                                  setState(() {
+                                    _todos[index].updateTargetDate(newDate);
+                                  });
+                                },
+                              ),
+                            ))
+                        .values
+                        .toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TodoItem {
+  String text;
+  bool isDone;
+  DateTime targetDate;
+
+  TodoItem(this.text, {this.isDone = false, required this.targetDate});
+
+  void toggleStatus() {
+    isDone = !isDone;
+  }
+
+  void updateTargetDate(DateTime newDate) {
+    targetDate = newDate;
+  }
+}
+
+class TodoListItem extends StatelessWidget {
+  final TodoItem todo;
+  final VoidCallback onDelete;
+  final ValueChanged<String> onUpdate;
+  final VoidCallback onToggleStatus;
+  final Function(DateTime) onUpdateTargetDate;
+  final int serialNumber;
+
+  const TodoListItem({
+    required Key key,
+    required this.todo,
+    required this.serialNumber,
+    required this.onDelete,
+    required this.onUpdate,
+    required this.onToggleStatus,
+    required this.onUpdateTargetDate,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime selectedDate = todo.targetDate;
+
+    return ListTile(
+      key: ValueKey(todo),
+      title: todo.isDone
+          ? Text(
+              todo.text,
+              style: const TextStyle(decoration: TextDecoration.lineThrough),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(todo.text),
+                Text(
+                  'Target Date: ${DateFormat('yyyy-MM-dd').format(todo.targetDate)}',
+                ),
+              ],
+            ),
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(
+              '$serialNumber.',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Checkbox(
+            value: todo.isDone,
+            onChanged: (bool? value) {
+              onToggleStatus();
+            },
+          ),
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              _showEditDialog(context);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: onDelete,
+          ),
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () {
+              _showDatePicker(context, selectedDate);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDatePicker(BuildContext context, DateTime selectedDate) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(DateTime.now().year + 1),
+    );
+    // Check if a new date is picked and it's different from the selected date
+    if (pickedDate != null && pickedDate != selectedDate) {
+      onUpdateTargetDate(
+          pickedDate); // Call the function to update the target date
+    }
+  }
+
+  Future<void> _showEditDialog(BuildContext context) async {
+    TextEditingController editController = TextEditingController();
+    editController.text = todo.text;
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Task'),
+          content: TextField(
+            controller: editController,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                onUpdate(editController.text);
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+
+// ignore_for_file: file_names
+
+import 'package:flutter/material.dart';
+import '../components/navbar.dart'; // Import the NavBar file
+import 'package:intl/intl.dart';
+
+class HomePage extends StatefulWidget {
+  // ignore: use_key_in_widget_constructors
+  const HomePage({Key? key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _todoController = TextEditingController();
+  final List<TodoItem> _todos = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home Page'),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Add the NavBar at the top of the Page
+          const NavBar(),
+
+          Expanded(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _todoController,
+                          decoration: const InputDecoration(
+                            hintText: 'Enter a new task',
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => setState(() {
+                          // Get the "from" date as today's date
+                          DateTime fromDate = DateTime.now();
+
+                          // Calculate the "to" date as 7 days from today
+                          DateTime toDate =
+                              DateTime.now().add(const Duration(days: 7));
+
+                          _todos.add(TodoItem(
+                            _todoController.text,
+                            from: fromDate,
+                            to: toDate,
+                          ));
+                          _todoController.clear();
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ReorderableListView(
+                    onReorder: (oldIndex, newIndex) {
+                      setState(() {
+                        if (oldIndex < newIndex) {
+                          newIndex -= 1;
+                        }
+                        final TodoItem item = _todos.removeAt(oldIndex);
+                        _todos.insert(newIndex, item);
+                      });
+                    },
+                    children: _todos
+                        .asMap()
+                        .map((index, todo) => MapEntry(
+                              index,
+                              TodoListItem(
+                                key: ValueKey(todo),
+                                todo: todo,
+                                serialNumber: index + 1,
+                                onDelete: () {
+                                  setState(() {
+                                    _todos.removeAt(index);
+                                  });
+                                },
+                                onUpdate: (String newText) {
+                                  setState(() {
+                                    _todos[index].text = newText;
+                                  });
+                                },
+                                onToggleStatus: () {
+                                  setState(() {
+                                    _todos[index].toggleStatus();
+                                  });
+                                },
+                                onUpdateTargetDate: (DateTime newDate) {
+                                  setState(() {
+                                    _todos[index].updateFrom(newDate);
+                                  });
+                                },
+                                onToUpdateTargetDate: (DateTime newDate) {
+                                  setState(() {
+                                    _todos[index].updateTo(newDate);
+                                  });
+                                },
+                              ),
+                            ))
+                        .values
+                        .toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TodoItem {
+  String text;
+  bool isDone;
+  DateTime from;
+  DateTime to;
+
+  TodoItem(this.text,
+      {this.isDone = false, required this.from, required this.to});
+
+  void toggleStatus() {
+    isDone = !isDone;
+  }
+
+  void updateFrom(DateTime newDate) {
+    from = newDate;
+  }
+
+  void updateTo(DateTime newDate) {
+    to = newDate;
+  }
+}
+
+class TodoListItem extends StatelessWidget {
+  final TodoItem todo;
+  final VoidCallback onDelete;
+  final ValueChanged<String> onUpdate;
+  final VoidCallback onToggleStatus;
+  final Function(DateTime) onUpdateTargetDate;
+  final Function(DateTime) onToUpdateTargetDate;
+  final int serialNumber;
+
+  const TodoListItem({
+    required Key key,
+    required this.todo,
+    required this.serialNumber,
+    required this.onDelete,
+    required this.onUpdate,
+    required this.onToggleStatus,
+    required this.onUpdateTargetDate,
+    required this.onToUpdateTargetDate,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime selectedFromDate = todo.from;
+    DateTime selectedToDate = todo.to;
+
+    return ListTile(
+      key: ValueKey(todo),
+      title: todo.isDone
+          ? Text(
+              todo.text,
+              style: const TextStyle(decoration: TextDecoration.lineThrough),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(todo.text),
+                Text(
+                  'From: ${DateFormat('yyyy-MM-dd').format(todo.from)}',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(width: 10), // Adjust spacing as needed
+                Text('To: ${DateFormat('yyyy-MM-dd').format(todo.to)}',
+                    style: const TextStyle(color: Colors.grey)),
+              ],
+            ),
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Text(
+              '$serialNumber.',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          Checkbox(
+            value: todo.isDone,
+            onChanged: (bool? value) {
+              onToggleStatus();
+            },
+          ),
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              _showEditDialog(context);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: onDelete,
+          ),
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () {
+              _showFromDatePicker(context, selectedFromDate);
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.calendar_today),
+            onPressed: () {
+              _showToDatePicker(context, selectedToDate);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFromDatePicker(BuildContext context, DateTime selectedDate) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(DateTime.now().year + 1),
+    );
+    if (pickedDate != null && pickedDate != selectedDate) {
+      onUpdateTargetDate(pickedDate);
+    }
+  }
+
+  void _showToDatePicker(BuildContext context, DateTime selectedDate) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(DateTime.now().year + 1),
+    );
+    if (pickedDate != null && pickedDate != selectedDate) {
+      onToUpdateTargetDate(pickedDate);
+    }
+  }
+
+  Future<void> _showEditDialog(BuildContext context) async {
+    TextEditingController editController = TextEditingController();
+    editController.text = todo.text;
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Task'),
+          content: TextField(
+            controller: editController,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                onUpdate(editController.text);
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

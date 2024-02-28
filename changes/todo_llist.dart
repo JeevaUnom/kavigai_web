@@ -1,15 +1,16 @@
-// ignore_for_file: unused_field
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+// import 'package:kavigai/Components/ghant_chart.dart' as GhantChart;
 
 class TodoList extends StatefulWidget {
   final TextEditingController controller;
 
-  const TodoList({super.key, required this.controller});
+  const TodoList({required Key key, required this.controller})
+      : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _TodoListState createState() => _TodoListState();
 }
 
@@ -106,6 +107,37 @@ class _TodoListState extends State<TodoList> {
                   .toList(),
             ),
           ),
+//           Expanded(
+//             child: GanttChartView(
+//               maxDuration: const Duration(days: 30 * 2), //optional, set to null for infinite horizontal scroll
+//               startDate: DateTime(2022, 6, 7), //required
+//               dayWidth: 30, //column width for each day
+//               eventHeight: 30, //row height for events
+//               stickyAreaWidth: 200, //sticky area width
+//               showStickyArea: true, //show sticky area or not
+//               showDays: true, //show days or not
+//               startOfTheWeek: DateTime.sunday, //custom start of the week
+//               weekEnds: const {DateTime.friday, DateTime.saturday}, //custom weekends
+//               isExtraHoliday: (context, day) {
+//                 //define custom holiday logic for each day
+//                 return DateUtils.isSameDay(DateTime(2022, 7, 1), day);
+//               },
+//               events: [
+//                 //event relative to startDate
+//                 GanttRelativeEvent(
+//                   relativeToStart: const Duration(days: 0),
+//                   duration: const Duration(days: 5),
+//                   displayName: 'Do a very helpful task',
+//                 ),
+//                 //event with absolute start and end
+//                 GanttAbsoluteEvent(
+//                   startDate: DateTime(2022, 6, 10),
+//                   endDate: DateTime(2022, 6, 16),
+//                   displayName: 'Another task',
+//                 ),
+//               ],
+//             ),
+//           ),
         ],
       ),
     );
@@ -146,7 +178,7 @@ class TodoListItem extends StatefulWidget {
   final List<TodoItem> todos; // Receive _todos list here
 
   const TodoListItem({
-    super.key,
+    required Key key,
     required this.todo,
     required this.serialNumber,
     required this.index,
@@ -156,10 +188,9 @@ class TodoListItem extends StatefulWidget {
     required this.onToggleStatus,
     required this.onUpdateTargetDate,
     required this.onToUpdateTargetDate,
-  });
+  }) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _TodoListItemState createState() => _TodoListItemState();
 }
 

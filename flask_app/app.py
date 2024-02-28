@@ -1,38 +1,56 @@
+from datetime import datetime
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_cors import CORS
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:jeeva@localhost/dbname'
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:jeeva@localhost/kavigai'
 db = SQLAlchemy(app)
 
-class User(db.Model):
+class Goals(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    begin_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    url = db.Column(db.String(255), nullable=True)
+    status = db.Column(db.String(50), nullable=False, default='New')
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-@app.route('/api/login', methods=['POST'])
-def login():
+@app.route('/api/goals', methods=['POST'])
+def create_goals():
     data = request.json
-    email = data.get('email')
-    password = data.get('password')
 
-    if not email or not password:
-        return jsonify({'message': 'Email and password are required'}), 400
+    name = data.get('name')
+    description = data.get('description')
+    begin_date_str = data.get('begin_date')
+    end_date_str = data.get('end_date')
+    url = data.get('url')
+    status = data.get('status', 'New')
 
-    user = User.query.filter_by(email=email).first()
+    if not name or not description or not begin_date_str or not end_date_str:
+        return jsonify({'message': 'Name, description, begin_date, and end_date are required'}), 400
 
-    if user and user.check_password(password):
-        return jsonify({'message': 'Login successful'}), 200
-    else:
-        return jsonify({'message': 'Invalid email or password'}), 401
+    try:
+        begin_date = datetime.strptime(begin_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'message': 'Invalid date format. Please use YYYY-MM-DD'}), 400
+
+    goals = Goals(
+        name=name,
+        description=description,
+        begin_date=begin_date,
+        end_date=end_date,
+        url=url,
+        status=status
+    )
+
+    db.session.add(goals)
+    db.session.commit()
+
+    return jsonify({'message': 'Goal created successfully'}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)

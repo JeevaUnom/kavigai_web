@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, unused_local_variable
+// ignore_for_file: use_build_context_synchronously, unused_local_variable, unused_element
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,7 +7,7 @@ import 'functions.dart'; // Import functions.dart where the functions are define
 class TodoList extends StatefulWidget {
   final TextEditingController controller;
 
-  const TodoList({Key? key, required this.controller}) : super(key: key);
+  const TodoList({super.key, required this.controller});
 
   @override
   // ignore: library_private_types_in_public_api

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class DateRangeSlider extends StatefulWidget {
   final DateTime fromDate;
@@ -19,31 +20,39 @@ class DateRangeSlider extends StatefulWidget {
 }
 
 class _DateRangeSliderState extends State<DateRangeSlider> {
+  double _fromSliderValue = 0.0;
+  double _toSliderValue = 1.0;
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text('From: ${widget.fromDate.toString().split(' ')[0]}'),
+        Text('From: ${DateFormat('yyyy-MM-dd').format(widget.fromDate)}'),
         Slider(
-          value: widget.fromDate.microsecondsSinceEpoch.toDouble(),
-          min: DateTime.now().microsecondsSinceEpoch.toDouble(),
-          max: widget.toDate.microsecondsSinceEpoch.toDouble(),
+          value: _fromSliderValue,
+          min: 0.0,
+          max: widget.toDate.difference(widget.fromDate).inDays.toDouble(),
           onChanged: (value) {
-            final newDate = DateTime.fromMicrosecondsSinceEpoch(value.toInt());
-            widget.onFromDateChanged(newDate);
+            setState(() {
+              _fromSliderValue = value;
+              widget.onFromDateChanged(
+                widget.fromDate.add(Duration(days: value.toInt())),
+              );
+            });
           },
         ),
-        Text('To: ${widget.toDate.toString().split(' ')[0]}'),
+        Text('To: ${DateFormat('yyyy-MM-dd').format(widget.toDate)}'),
         Slider(
-          value: widget.toDate.microsecondsSinceEpoch.toDouble(),
-          min: widget.fromDate.microsecondsSinceEpoch.toDouble(),
-          max: widget.fromDate
-              .add(const Duration(days: 7))
-              .microsecondsSinceEpoch
-              .toDouble(),
+          value: _toSliderValue,
+          min: 0.0,
+          max: widget.toDate.difference(widget.fromDate).inDays.toDouble(),
           onChanged: (value) {
-            final newDate = DateTime.fromMicrosecondsSinceEpoch(value.toInt());
-            widget.onToDateChanged(newDate);
+            setState(() {
+              _toSliderValue = value;
+              widget.onToDateChanged(
+                widget.fromDate.add(Duration(days: value.toInt())),
+              );
+            });
           },
         ),
       ],

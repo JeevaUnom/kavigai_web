@@ -1,25 +1,28 @@
-// ignore_for_file: prefer_final_fields
+// ignore_for_file: unused_import
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-import '../Components/Navbar.dart'; // Assuming NavBar is in the same directory
+import 'package:http/http.dart' as http;
+import '../Components/goal_list.dart';
+import '../Components/Navbar.dart';
+import 'dart:convert';
 
 class GoalPage extends StatefulWidget {
-  const GoalPage({Key? key}) : super(key: key);
+  const GoalPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _GoalPageState createState() => _GoalPageState();
 }
 
 class _GoalPageState extends State<GoalPage> {
-  final List<Map<String, dynamic>> _submittedGoals = [];
-
-  TextEditingController _goalNameController = TextEditingController();
-  TextEditingController _goalDescriptionController = TextEditingController();
-  TextEditingController _urlController = TextEditingController();
+  final TextEditingController _goalNameController = TextEditingController();
+  final TextEditingController _goalDescriptionController =
+      TextEditingController();
+  final TextEditingController _urlController = TextEditingController();
   DateTime? _beginDate;
   DateTime? _endDate;
+  List<Goal> enteredGoals = [];
 
   @override
   Widget build(BuildContext context) {
@@ -41,12 +44,6 @@ class _GoalPageState extends State<GoalPage> {
                 labelText: 'Goal Name *',
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a goal name';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 20.0),
             TextFormField(
@@ -55,12 +52,6 @@ class _GoalPageState extends State<GoalPage> {
                 labelText: 'Goal Description *',
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a goal description';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 20.0),
             Row(
@@ -92,6 +83,7 @@ class _GoalPageState extends State<GoalPage> {
             ),
             const SizedBox(height: 20.0),
             DropdownButtonFormField<String>(
+              value: 'New', // Set the initial value to 'New'
               decoration: const InputDecoration(
                 labelText: 'Status',
                 border: OutlineInputBorder(),
@@ -102,20 +94,18 @@ class _GoalPageState extends State<GoalPage> {
                         child: Text(status),
                       ))
                   .toList(),
-              onChanged: (value) {},
+              onChanged: (value) {
+                // Handle status change if needed
+              },
             ),
             const SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: _handleSubmit,
               child: const Text('Submit'),
             ),
-            const SizedBox(height: 20.0),
-            const Text(
-              'Goal List',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10.0),
-            _buildSubmittedGoalsList(),
+            if (enteredGoals
+                .isNotEmpty) // Only display if there are entered goals
+              GoalList(goals: enteredGoals),
           ],
         ),
       ),
@@ -162,119 +152,101 @@ class _GoalPageState extends State<GoalPage> {
     }
   }
 
-  void _handleSubmit() {
+  void _handleSubmit() async {
+    // ignore: avoid_print
+    print('Submit button pressed');
     if (_goalNameController.text.isNotEmpty &&
         _goalDescriptionController.text.isNotEmpty &&
         _beginDate != null &&
         _endDate != null) {
-      setState(() {
-        _submittedGoals.add({
-          'name': _goalNameController.text,
-          'description': _goalDescriptionController.text,
-          'beginDate': _beginDate,
-          'endDate': _endDate,
-          'url': _urlController.text,
-          'status': 'New', // You might want to add logic for status selection
-        });
+      final Map<String, dynamic> goalData = {
+        'name': _goalNameController.text,
+        'description': _goalDescriptionController.text,
+        'begin_date': DateFormat('yyyy-MM-dd')
+            .format(_beginDate!), // Corrected key to snake_case
+        'end_date': DateFormat('yyyy-MM-dd')
+            .format(_endDate!), // Corrected key to snake_case
+        'url': _urlController.text,
+        'status': 'New', // You might want to add logic for status selection
+      };
 
-        // Clearing form fields after submission
+      final Uri url = Uri.parse('http://127.0.0.1:5000/api/goals');
+
+      final response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: json.encode(goalData), // Corrected method name to json.encode
+      );
+
+      if (response.statusCode == 201) {
+        // Successfully saved to the database
+        _showSuccessDialog();
+        // Fetch updated list of goals from the server
+        final Goal newGoal = Goal(
+          name: _goalNameController.text,
+          description: _goalDescriptionController.text,
+          beginDate: DateFormat('yyyy-MM-dd').format(_beginDate!),
+          endDate: DateFormat('yyyy-MM-dd').format(_endDate!),
+          url: _urlController.text,
+          status: 'New',
+        );
+        setState(() {
+          enteredGoals.add(newGoal);
+        });
+        // Clear form fields
         _goalNameController.clear();
         _goalDescriptionController.clear();
         _urlController.clear();
-        _beginDate = null;
-        _endDate = null;
-      });
+        setState(() {
+          _beginDate = null;
+          _endDate = null;
+        });
+      } else {
+        // Failed to save to the database
+        _showErrorDialog();
+      }
     }
   }
 
-  Widget _buildSubmittedGoalsList() {
-    return Column(
-      children: _submittedGoals.map<Widget>((goal) {
-        String formattedBeginDate =
-            DateFormat('yyyy-MM-dd').format(goal['beginDate']);
-        String formattedEndDate =
-            DateFormat('yyyy-MM-dd').format(goal['endDate']);
-
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8.0),
-          child: ListTile(
-            title: Text(
-              goal['name'],
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success'),
+          content: const Text('Goal submitted successfully'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Description: ${goal['description']}'),
-                Text('Status: ${goal['status']}'),
-                Text('URL: ${goal['url']}'),
-              
-              ],
-            ),
-            trailing: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Text('Begin: $formattedBeginDate'),
-                Text('End: $formattedEndDate'),
-                // const SizedBox(width: 8.0),
-                // IconButton(
-                //   icon: Icon(Icons.edit),
-                //   onPressed: () {
-                //     // Handle edit action
-                //   },
-                // ),
-                // IconButton(
-                //   icon: Icon(Icons.delete),
-                //   onPressed: () {
-                //     // Handle delete action
-                //   },
-                // ),
-              ],
-            ),
-          ),
+          ],
         );
-      }).toList(),
+      },
+    );
+  }
+
+  void _showErrorDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Failed to submit goal'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
-
-  // Widget _buildGoalItem(int index) {
-  //   final goal = _submittedGoals[index];
-  //   return Card(
-  //     margin: const EdgeInsets.symmetric(vertical: 8.0),
-  //     child: ListTile(
-  //       leading: Text('${index + 1}'),
-  //       title: Text(
-  //         goal['name'],
-  //         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-  //       ),
-  //       subtitle: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Text('Description: ${goal['description']}'),
-  //           Text('Status: ${goal['status']}'),
-  //           Text('URL: ${goal['url']}'),
-  //         ],
-  //       ),
-  //       trailing: Container(
-  //         padding: const EdgeInsets.all(8.0),
-  //         width: MediaQuery.of(context).size.width *
-  //             0.3, // Adjust width of the date container
-  //         decoration: BoxDecoration(
-  //           border: Border.all(color: Colors.grey),
-  //           borderRadius: BorderRadius.circular(4.0),
-  //         ),
-  //         child: Column(
-  //           crossAxisAlignment: CrossAxisAlignment.end,
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             Text('Begin: ${goal['beginDate']}'),
-  //             Text('End: ${goal['endDate']}'),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-

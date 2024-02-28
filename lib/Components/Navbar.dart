@@ -39,6 +39,8 @@ class NavBar extends StatelessWidget {
               NavItem('Mentor', '/mentor'),
               SizedBox(width: 20.0),
               NavItem('Profile', '/profile'),
+              SizedBox(width: 20.0),
+              NavItem('Chart', '/chart'),
             ],
           ),
         ],

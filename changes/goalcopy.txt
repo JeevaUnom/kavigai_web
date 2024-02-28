@@ -147,3 +147,236 @@ class _GoalPageState extends State<GoalPage> {
     }
   }
 }
+
+
+
+// ignore_for_file: prefer_final_fields
+
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../Components/Navbar.dart'; // Assuming NavBar is in the same directory
+
+class GoalPage extends StatefulWidget {
+  const GoalPage({Key? key}) : super(key: key);
+
+  @override
+  _GoalPageState createState() => _GoalPageState();
+}
+
+class _GoalPageState extends State<GoalPage> {
+  final List<Map<String, dynamic>> _submittedGoals = [];
+
+  TextEditingController _goalNameController = TextEditingController();
+  TextEditingController _goalDescriptionController = TextEditingController();
+  TextEditingController _urlController = TextEditingController();
+  DateTime? _beginDate;
+  DateTime? _endDate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Goal Page'),
+        backgroundColor: const Color.fromARGB(255, 251, 253, 255),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const NavBar(),
+            const SizedBox(height: 20.0),
+            TextFormField(
+              controller: _goalNameController,
+              decoration: const InputDecoration(
+                labelText: 'Goal Name *',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a goal name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20.0),
+            TextFormField(
+              controller: _goalDescriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Goal Description *',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a goal description';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20.0),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDateField('Begin Date *', _beginDate, (date) {
+                    setState(() {
+                      _beginDate = date;
+                    });
+                  }, context),
+                ),
+                const SizedBox(width: 20.0),
+                Expanded(
+                  child: _buildDateField('End Date *', _endDate, (date) {
+                    setState(() {
+                      _endDate = date;
+                    });
+                  }, context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20.0),
+            TextFormField(
+              controller: _urlController,
+              decoration: const InputDecoration(
+                labelText: 'URL for Reference',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20.0),
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(
+                labelText: 'Status',
+                border: OutlineInputBorder(),
+              ),
+              items: ['New', 'Completed', 'In Progress']
+                  .map((status) => DropdownMenuItem(
+                        value: status,
+                        child: Text(status),
+                      ))
+                  .toList(),
+              onChanged: (value) {},
+            ),
+            const SizedBox(height: 20.0),
+            ElevatedButton(
+              onPressed: _handleSubmit,
+              child: const Text('Submit'),
+            ),
+            const SizedBox(height: 20.0),
+            const Text(
+              'Goal List',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10.0),
+            _buildSubmittedGoalsList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateField(String labelText, DateTime? selectedDate,
+      Function(DateTime?) onChanged, BuildContext context) {
+    return TextFormField(
+      readOnly: true,
+      controller: TextEditingController(
+          text: selectedDate != null
+              ? selectedDate.toString().split(" ")[0]
+              : ''),
+      decoration: InputDecoration(
+        labelText: labelText,
+        border: const OutlineInputBorder(),
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.calendar_today),
+          onPressed: () {
+            _selectDate(context, selectedDate, onChanged);
+          },
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter a date';
+        }
+        return null;
+      },
+    );
+  }
+
+  Future<void> _selectDate(BuildContext context, DateTime? initialDate,
+      Function(DateTime?) onChanged) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate != null) {
+      onChanged(pickedDate);
+    }
+  }
+
+  void _handleSubmit() {
+    if (_goalNameController.text.isNotEmpty &&
+        _goalDescriptionController.text.isNotEmpty &&
+        _beginDate != null &&
+        _endDate != null) {
+      setState(() {
+        _submittedGoals.add({
+          'name': _goalNameController.text,
+          'description': _goalDescriptionController.text,
+          'beginDate': _beginDate,
+          'endDate': _endDate,
+          'url': _urlController.text,
+          'status': 'New', // You might want to add logic for status selection
+        });
+
+        // Clearing form fields after submission
+        _goalNameController.clear();
+        _goalDescriptionController.clear();
+        _urlController.clear();
+        _beginDate = null;
+        _endDate = null;
+      });
+    }
+  }
+
+  Widget _buildSubmittedGoalsList() {
+    return Column(
+      children: _submittedGoals.map<Widget>((goal) {
+        String formattedBeginDate =
+            DateFormat('yyyy-MM-dd').format(goal['beginDate']);
+        String formattedEndDate =
+            DateFormat('yyyy-MM-dd').format(goal['endDate']);
+
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 8.0),
+          child: ListTile(
+            title: Text(
+              goal['name'],
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Description: ${goal['description']}'),
+                Text('Status: ${goal['status']}'),
+                Text('URL: ${goal['url']}'),
+              
+              ],
+            ),
+            trailing: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Text('Begin: $formattedBeginDate'),
+                Text('End: $formattedEndDate'),
+             
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+ 

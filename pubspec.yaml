@@ -39,6 +39,7 @@ dependencies:
   flutter_xlider: ^3.5.0
   http: ^1.2.0
   item_count_number_button: ^1.9.2
+  adaptive_navbar: ^0.0.3
   
 
 

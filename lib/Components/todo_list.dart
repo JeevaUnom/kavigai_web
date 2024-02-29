@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, unused_local_variable, unused_element
+// ignore_for_file: use_build_context_synchronously, unused_local_variable, unused_element, library_private_types_in_public_api
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -10,7 +10,6 @@ class TodoList extends StatefulWidget {
   const TodoList({super.key, required this.controller});
 
   @override
-  // ignore: library_private_types_in_public_api
   _TodoListState createState() => _TodoListState();
 }
 
@@ -155,70 +154,34 @@ class TodoListItem extends StatefulWidget {
   });
 
   @override
-  // ignore: library_private_types_in_public_api
   _TodoListItemState createState() => _TodoListItemState();
 }
 
 class _TodoListItemState extends State<TodoListItem> {
-  late String _dropdownValue;
-  double _fromSliderValue = 0.0;
-  double _toSliderValue = 1.0;
-  void _changeFromToDate(BuildContext context) {
-    changeFromToDate(
-      context,
-      widget.todo,
-      widget.onUpdateTargetDate,
-      widget.onToUpdateTargetDate,
-      _fromSliderValue, // Pass the value of the from slider
-      _toSliderValue, // Pass the value of the to slider
-    );
-  }
+  late double _fromSliderValue;
+  late double _toSliderValue;
 
   @override
   void initState() {
     super.initState();
-    _dropdownValue = 'current';
+    _fromSliderValue = widget.todo.from.millisecondsSinceEpoch.toDouble();
+    _toSliderValue = widget.todo.to.millisecondsSinceEpoch.toDouble();
   }
 
   @override
   Widget build(BuildContext context) {
-    return LongPressDraggable(
-      data: widget.index,
-      feedback: SizedBox(
-        width: 100.0,
-        child: Card(
-          elevation: 10,
-          child: Padding(
+    return Card(
+      elevation: 2.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(widget.todo.text),
-          ),
-        ),
-      ),
-      childWhenDragging: const SizedBox(),
-      child: DragTarget<int>(
-        onAccept: (int data) {
-          if (data != widget.index) {
-            onReorder(data, widget.index, setState, widget.todos);
-          }
-        },
-        builder: (BuildContext context, List<int?> candidateData,
-            List<dynamic> rejectedData) {
-          return ListTile(
-            key: ValueKey(widget.todo),
-            title: Row(
+            child: Row(
               children: [
                 DropdownButton<String>(
-                  value: _dropdownValue,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _dropdownValue = newValue!;
-                      if (_dropdownValue == 'completed') {
-                        widget.todo.isDone = true;
-                      } else {
-                        widget.todo.isDone = false;
-                      }
-                    });
-                  },
+                  value: 'current',
+                  onChanged: (String? newValue) {},
                   items: <String>['current', 'skipped', 'new', 'completed']
                       .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
@@ -227,6 +190,7 @@ class _TodoListItemState extends State<TodoListItem> {
                     );
                   }).toList(),
                 ),
+                const SizedBox(width: 8.0),
                 Text(
                   '${widget.serialNumber}. ',
                   style: TextStyle(
@@ -235,29 +199,16 @@ class _TodoListItemState extends State<TodoListItem> {
                         : TextDecoration.none,
                   ),
                 ),
-                Text(
-                  widget.todo.text,
-                  style: TextStyle(
-                    decoration: widget.todo.isDone
-                        ? TextDecoration.lineThrough
-                        : TextDecoration.none,
+                Expanded(
+                  child: Text(
+                    widget.todo.text,
+                    style: TextStyle(
+                      decoration: widget.todo.isDone
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
                   ),
                 ),
-                const Spacer(),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                        'From: ${DateFormat('dd-MM-yyyy').format(widget.todo.from)}'),
-                    Text(
-                        'To: ${DateFormat('dd-MM-yyyy').format(widget.todo.to)}'),
-                  ],
-                ),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
                 IconButton(
                   icon: const Icon(Icons.calendar_today),
                   onPressed: () {
@@ -272,112 +223,106 @@ class _TodoListItemState extends State<TodoListItem> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.more_vert),
-                  onPressed: () {
-                    _showMoreOptions(context);
-                  },
-                ),
-                IconButton(
-                  // Add an additional IconButton for changing from/to dates
-                  icon: const Icon(
-                      Icons.tune), // Change the icon to a slider icon
-                  onPressed: () {
-                    _showSliderDialog(context);
-                  },
+                  onPressed: () {},
                 ),
               ],
             ),
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Text(
+                  'From: ${DateFormat('dd-MM-yyyy').format(widget.todo.from)}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                Expanded(
+                  child: RangeSlider(
+                    values: RangeValues(_fromSliderValue, _toSliderValue),
+                    min: DateTime(2024).millisecondsSinceEpoch.toDouble(),
+                    max: DateTime(2026).millisecondsSinceEpoch.toDouble(),
+                    onChanged: (RangeValues values) {
+                      setState(() {
+                        _fromSliderValue = values.start;
+                        _toSliderValue = values.end;
+                        widget.todo.updateFrom(
+                            DateTime.fromMillisecondsSinceEpoch(
+                                _fromSliderValue.toInt()));
+                        widget.todo.updateTo(
+                            DateTime.fromMillisecondsSinceEpoch(
+                                _toSliderValue.toInt()));
+                      });
+                    },
+                    labels: RangeLabels(
+                      DateFormat('dd-MM-yyyy').format(widget.todo.from),
+                      DateFormat('dd-MM-yyyy').format(widget.todo.to),
+                    ),
+                  ),
+                ),
+                Text(
+                  'To: ${DateFormat('dd-MM-yyyy').format(widget.todo.to)}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  void onUpdateTargetDate(DateTime newDate) {
+    setState(() {
+      widget.todo.updateFrom(newDate);
+    });
+  }
+
+  void onToUpdateTargetDate(DateTime newDate) {
+    setState(() {
+      widget.todo.updateTo(newDate);
+    });
+  }
+
   void _changeFromDate(BuildContext context) async {
-    changeFromDate(context, widget.todo, widget.onUpdateTargetDate);
+    final DateTime? newDate = await showDatePicker(
+      context: context,
+      initialDate: widget.todo.from,
+      firstDate: DateTime(DateTime.now().year - 1),
+      lastDate: widget.todo.to.subtract(const Duration(days: 1)),
+    );
+
+    if (newDate != null) {
+      if (newDate.isBefore(widget.todo.to.subtract(const Duration(days: 1)))) {
+        onUpdateTargetDate(newDate);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a date before the current "to" date.'),
+          ),
+        );
+      }
+    }
   }
 
   void _changeToDate(BuildContext context) async {
-    changeToDate(context, widget.todo, widget.onToUpdateTargetDate);
-  }
-
-  void _showSliderDialog(BuildContext context) {
-    // Get the current from and to dates
-    DateTime fromDate = widget.todo.from;
-    DateTime toDate = widget.todo.to;
-
-    // Calculate the maximum slider value based on the difference between from and to dates
-    double maxSliderValue = toDate.difference(fromDate).inDays.toDouble();
-
-    showDialog(
+    final DateTime? newDate = await showDatePicker(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return AlertDialog(
-              title: const Text('Adjust Dates'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          DateFormat('MMM d').format(fromDate),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        Text(
-                          DateFormat('MMM d').format(toDate),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  RangeSlider(
-                    min: 0.0,
-                    max: maxSliderValue,
-                    values: RangeValues(_fromSliderValue, _toSliderValue),
-                    onChanged: (RangeValues newValues) {
-                      setState(() {
-                        // Update the from and to slider values
-                        _fromSliderValue =
-                            newValues.start.clamp(0.0, maxSliderValue);
-                        _toSliderValue =
-                            newValues.end.clamp(0.0, maxSliderValue);
-
-                        // Calculate the new from and to dates based on the slider values
-                        DateTime newFromDate = fromDate
-                            .add(Duration(days: _fromSliderValue.toInt()));
-                        DateTime newToDate = fromDate
-                            .add(Duration(days: _toSliderValue.toInt()));
-
-                        // Update the from and to dates of the todo item
-                        widget.onUpdateTargetDate(newFromDate);
-                        widget.onToUpdateTargetDate(newToDate);
-                      });
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Close'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      initialDate: widget.todo.to,
+      firstDate: widget.todo.from.add(const Duration(days: 1)),
+      lastDate: DateTime(DateTime.now().year + 1),
     );
-  }
 
-  void _showMoreOptions(BuildContext context) {
-    showMoreOptions(context, widget.onDelete, () {
-      showEditDialog(context, TextEditingController(), (String value) {});
-    });
+    if (newDate != null) {
+      if (newDate.isAfter(widget.todo.from.add(const Duration(days: 1)))) {
+        onToUpdateTargetDate(newDate);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('Please select a date after the current "from" date.'),
+          ),
+        );
+      }
+    }
   }
 }

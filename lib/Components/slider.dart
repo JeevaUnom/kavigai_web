@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -8,12 +10,12 @@ class DateRangeSlider extends StatefulWidget {
   final ValueChanged<DateTime> onToDateChanged;
 
   const DateRangeSlider({
-    Key? key,
+    super.key,
     required this.fromDate,
     required this.toDate,
     required this.onFromDateChanged,
     required this.onToDateChanged,
-  }) : super(key: key);
+  });
 
   @override
   _DateRangeSliderState createState() => _DateRangeSliderState();

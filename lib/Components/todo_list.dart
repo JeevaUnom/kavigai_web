@@ -182,7 +182,7 @@ class _TodoListItemState extends State<TodoListItem> {
                 DropdownButton<String>(
                   value: 'current',
                   onChanged: (String? newValue) {},
-                  items: <String>['current', 'skipped', 'new', 'completed']
+                  items: <String>['current', 'new', 'completed']
                       .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -274,12 +274,14 @@ class _TodoListItemState extends State<TodoListItem> {
   void onUpdateTargetDate(DateTime newDate) {
     setState(() {
       widget.todo.updateFrom(newDate);
+      _fromSliderValue = widget.todo.from.millisecondsSinceEpoch.toDouble();
     });
   }
 
   void onToUpdateTargetDate(DateTime newDate) {
     setState(() {
       widget.todo.updateTo(newDate);
+      _toSliderValue = widget.todo.to.millisecondsSinceEpoch.toDouble();
     });
   }
 

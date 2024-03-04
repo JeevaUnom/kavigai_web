@@ -18,6 +18,22 @@ class Goals(db.Model):
     url = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(50), nullable=False, default='New')
 
+@app.route('/api/goals', methods=['GET'])
+def get_goals():
+    goals = Goals.query.all()
+    goals_list = []
+    for goal in goals:
+        goals_list.append({
+            'id': goal.id,
+            'name': goal.name,
+            'description': goal.description,
+            'begin_date': goal.begin_date.strftime('%Y-%m-%d'),
+            'end_date': goal.end_date.strftime('%Y-%m-%d'),
+            'url': goal.url,
+            'status': goal.status
+        })
+    return jsonify({'goals': goals_list})
+
 @app.route('/api/goals', methods=['POST'])
 def create_goals():
     data = request.json

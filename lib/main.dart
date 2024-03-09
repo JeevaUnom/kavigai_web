@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
               userName: '',
               userEmail: '',
             ),
-       // '/chart': (context) => GanttChartPage(),
+        // '/chart': (context) => GanttChartPage(),
       },
     );
   }

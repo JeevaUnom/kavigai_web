@@ -223,7 +223,9 @@ class _TodoListItemState extends State<TodoListItem> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.more_vert),
-                  onPressed: () {},
+                  onPressed: () {
+                    _showMoreOptions(context);
+                  },
                 ),
               ],
             ),
@@ -304,6 +306,84 @@ class _TodoListItemState extends State<TodoListItem> {
         );
       }
     }
+  }
+
+  void _showMoreOptions(BuildContext context) {
+    showMenu<String>(
+      context: context,
+      position: const RelativeRect.fromLTRB(
+          500, 200, 0, 0), // Adjust position as needed
+      items: <PopupMenuEntry<String>>[
+        const PopupMenuItem<String>(
+          value: 'edit',
+          child: ListTile(
+            leading: Icon(Icons.edit),
+            title: Text('Edit Task'),
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'delete',
+          child: ListTile(
+            leading: Icon(Icons.delete),
+            title: Text('Delete Task'),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'edit') {
+        _showEditDialog(context);
+      } else if (value == 'delete') {
+        widget.onDelete(); // Call the onDelete callback to delete the task
+      }
+    });
+  }
+
+  Future<void> _showEditDialog(BuildContext context) async {
+    TextEditingController editController = TextEditingController();
+    editController.text = widget.todo.text;
+
+    // DateTime selectedDate = widget.todo.to; // Get the current task's "to" date
+    // DateTime currentDate = DateTime.now(); // Get the current date
+
+    // if (selectedDate.isBefore(currentDate)) {
+    //   _dropdownValue = 'current';
+    // } else {
+    //   int differenceInDays = selectedDate.difference(currentDate).inDays;
+
+    //   if (differenceInDays > 7) {
+    //     _dropdownValue = 'new';
+    //   } else {
+    //     _dropdownValue = 'completed';
+    //   }
+    // }
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          // edit dialbox
+          title: const Text('Edit Task'),
+          content: TextField(
+            controller: editController,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                widget.onUpdate(editController.text);
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _changeToDate(BuildContext context) async {

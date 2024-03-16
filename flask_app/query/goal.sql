@@ -9,3 +9,23 @@ CREATE TABLE your_table_name (
     url VARCHAR(255),
     status VARCHAR(50) NOT NULL DEFAULT 'New'
 );
+
+--user table
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    username VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE books (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NOT NULL,
+    image_url VARCHAR(255),
+    genre VARCHAR(100),
+    number_of_pages INTEGER,
+    ratings DECIMAL(3, 2),
+    number_of_peoples_rated INTEGER,
+    description TEXT
+);

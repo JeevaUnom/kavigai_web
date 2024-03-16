@@ -1,36 +1,75 @@
-// ignore_for_file: unused_import, library_private_types_in_public_api, duplicate_ignore
+// ignore_for_file: library_private_types_in_public_api, unused_import, use_super_parameters
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:kavigai/Components/Navbar.dart';
 import 'package:kavigai/Components/goal_list.dart';
-import 'package:flutter/cupertino.dart';
-// ignore: unused_import
 import '../pages/goal.dart'; // Import the Goal class
+import '../Components/recommendation_list.dart'; // Import the recommendation list page
 
 class GoalDetailPage extends StatefulWidget {
   final Goal goal;
 
-  const GoalDetailPage({super.key, required this.goal});
+  const GoalDetailPage({Key? key, required this.goal}) : super(key: key);
 
   @override
   _GoalDetailPageState createState() => _GoalDetailPageState();
 }
 
 class _GoalDetailPageState extends State<GoalDetailPage> {
-  late String _selectedTodoType;
-  final TextEditingController _taskController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _beginDateController = TextEditingController();
-  final TextEditingController _endDateController = TextEditingController();
-  final TextEditingController _statusController = TextEditingController();
+  String _selectedService = '--select service--'; // Dropdown value holder
 
-  final List<Task> _tasks = []; // List to hold tasks
+  final List<String> _services = [
+    '--select service--',
+    'ToDo',
+    'Books',
+    'Events',
+    'Meeting'
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedTodoType = 'new'; // Default to 'new' todo type
+  void _handleServiceSelection(String selectedService) {
+    setState(() {
+      _selectedService = selectedService;
+    });
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Recommendation for $_selectedService',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        // Handle adding details here
+                        // You can implement the logic to add details for the selected service
+                      },
+                      icon: const Icon(Icons.add),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'This is where your custom recommendation UI goes for $_selectedService.',
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -47,114 +86,44 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
             const NavBar(),
             Text(
               widget.goal.name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 15),
             Text('Description: ${widget.goal.description}'),
             Text('URL: ${widget.goal.url}'),
             Text('Status: ${widget.goal.status}'),
             Text('Begin Date: ${widget.goal.beginDate}'),
             Text('End Date: ${widget.goal.endDate}'),
-            const SizedBox(height: 20),
-            const Text(
-              'Associate with a To-Do:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            CupertinoSegmentedControl(
-              children: const {
-                'new': Text('New To-Do'),
-                'existing': Text('Existing To-Do'),
-              },
-              groupValue: _selectedTodoType,
-              onValueChanged: (value) {
+            const SizedBox(height: 25),
+            DropdownButton<String>(
+              value: _selectedService,
+              onChanged: (newValue) {
                 setState(() {
-                  _selectedTodoType = value.toString();
+                  _selectedService = newValue!;
+                  _handleServiceSelection(_selectedService);
                 });
               },
+              items: _services.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
             ),
-            if (_selectedTodoType == 'new') ...[
-              const SizedBox(height: 20),
-              const Text(
-                'Create New To-Do',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              TextFormField(
-                controller: _taskController,
-                decoration: const InputDecoration(labelText: 'Task'),
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-              ),
-              TextFormField(
-                controller: _beginDateController,
-                decoration: const InputDecoration(labelText: 'Begin Date'),
-              ),
-              TextFormField(
-                controller: _endDateController,
-                decoration: const InputDecoration(labelText: 'End Date'),
-              ),
-              TextFormField(
-                controller: _statusController,
-                decoration: const InputDecoration(labelText: 'Status'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _addTask(); // Add task when button is pressed
-                },
-                child: const Text('Add Task'),
-              ),
-            ],
-            Expanded(
-              child: ListView.builder(
-                itemCount: _tasks.length,
-                itemBuilder: (context, index) {
-                  final task = _tasks[index];
-                  return ListTile(
-                    title: Text(task.name),
-                    subtitle: Text(task.description),
-                    trailing: Text(task.status),
-                  );
-                },
-              ),
-            ),
+            // const SizedBox(height: 20),
+            // ElevatedButton(
+            //   onPressed: () {
+            //     // Add service logic here
+            //     if (_selectedService != '--select service--') {
+            //       // Perform actions based on the selected service
+            //       print('Selected service: $_selectedService');
+            //     }
+            //   },
+            //   child: const Text('Add Service'),
+            // ),
           ],
         ),
       ),
     );
   }
-
-  void _addTask() {
-    setState(() {
-      _tasks.add(Task(
-        name: _taskController.text,
-        description: _descriptionController.text,
-        beginDate: _beginDateController.text,
-        endDate: _endDateController.text,
-        status: _statusController.text,
-      ));
-      // Clear text fields after adding task
-      _taskController.clear();
-      _descriptionController.clear();
-      _beginDateController.clear();
-      _endDateController.clear();
-      _statusController.clear();
-    });
-  }
-}
-
-class Task {
-  final String name;
-  final String description;
-  final String beginDate;
-  final String endDate;
-  final String status;
-
-  Task({
-    required this.name,
-    required this.description,
-    required this.beginDate,
-    required this.endDate,
-    required this.status,
-  });
 }

@@ -1,0 +1,200 @@
+// ignore_for_file: unused_import, library_private_types_in_public_api, duplicate_ignore
+
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:kavigai/Components/Navbar.dart';
+import 'package:kavigai/Components/goal_list.dart';
+import 'package:flutter/cupertino.dart';
+// ignore: unused_import
+import '../pages/goal.dart'; // Import the Goal class
+
+class GoalDetailPage extends StatefulWidget {
+  final Goal goal;
+
+  const GoalDetailPage({super.key, required this.goal});
+
+  @override
+  _GoalDetailPageState createState() => _GoalDetailPageState();
+}
+
+class _GoalDetailPageState extends State<GoalDetailPage> {
+  late String _selectedTodoType;
+  final TextEditingController _taskController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _beginDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
+  final TextEditingController _statusController = TextEditingController();
+
+  final List<Task> _tasks = []; // List to hold tasks
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTodoType = 'new'; // Default to 'new' todo type
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Goal Details'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const NavBar(),
+            Text(
+              widget.goal.name,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text('Description: ${widget.goal.description}'),
+            Text('URL: ${widget.goal.url}'),
+            Text('Status: ${widget.goal.status}'),
+            Text('Begin Date: ${widget.goal.beginDate}'),
+            Text('End Date: ${widget.goal.endDate}'),
+            // const SizedBox(height: 20),
+            // const Text(
+            //   'Associate with a To-Do:',
+            //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            // ),
+            // CupertinoSegmentedControl(
+            //   children: const {
+            //     'new': Text('New To-Do'),
+            //     'existing': Text('Existing To-Do'),
+            //   },
+            //   groupValue: _selectedTodoType,
+            //   onValueChanged: (value) {
+            //     setState(() {
+            //       _selectedTodoType = value.toString();
+            //     });
+            //   },
+            // ),
+           // if (_selectedTodoType == 'new') ...[
+              // const SizedBox(height: 20),
+              // const Text(
+              //   'Create New To-Do',
+              //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // ),
+              // TextFormField(
+              //   controller: _taskController,
+              //   decoration: const InputDecoration(labelText: 'Task'),
+              // ),
+              // TextFormField(
+              //   controller: _descriptionController,
+              //   decoration: const InputDecoration(labelText: 'Description'),
+              // ),
+              // TextFormField(
+              //   controller: _beginDateController,
+              //   readOnly: true,
+              //   decoration: InputDecoration(
+              //     labelText: 'Begin Date',
+              //     suffixIcon: IconButton(
+              //       icon: const Icon(Icons.calendar_today),
+              //       onPressed: () async {
+              //         final DateTime? picked = await showDatePicker(
+              //           context: context,
+              //           initialDate: DateTime.now(),
+              //           firstDate: DateTime(2000),
+              //           lastDate: DateTime(2101),
+              //         );
+              //         if (picked != null && picked != DateTime.now()) {
+              //           setState(() {
+              //             _beginDateController.text =
+              //                 DateFormat('yyyy-MM-dd').format(picked);
+              //           });
+              //         }
+              //       },
+              //     ),
+              //   ),
+              // ),
+              // TextFormField(
+              //   controller: _endDateController,
+              //   readOnly: true,
+              //   decoration: InputDecoration(
+              //     labelText: 'End Date',
+              //     suffixIcon: IconButton(
+              //       icon: const Icon(Icons.calendar_today),
+              //       onPressed: () async {
+              //         final DateTime? picked = await showDatePicker(
+              //           context: context,
+              //           initialDate: DateTime.now(),
+              //           firstDate: DateTime(2000),
+              //           lastDate: DateTime(2101),
+              //         );
+              //         if (picked != null && picked != DateTime.now()) {
+              //           setState(() {
+              //             _endDateController.text =
+              //                 DateFormat('yyyy-MM-dd').format(picked);
+              //           });
+              //         }
+              //       },
+              //     ),
+              //   ),
+              // ),
+              // TextFormField(
+              //   controller: _statusController,
+              //   decoration: const InputDecoration(labelText: 'Status'),
+              // ),
+              // ElevatedButton(
+              //   onPressed: () {
+              //     _addTask(); // Add task when button is pressed
+              //   },
+              //   child: const Text('Add Task'),
+              // ),
+           // ],
+            Expanded(
+              child: ListView.builder(
+                itemCount: _tasks.length,
+                itemBuilder: (context, index) {
+                  final task = _tasks[index];
+                  return ListTile(
+                    title: Text(task.name),
+                    subtitle: Text(task.description),
+                    trailing: Text(task.status),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _addTask() {
+    setState(() {
+      _tasks.add(Task(
+        name: _taskController.text,
+        description: _descriptionController.text,
+        beginDate: _beginDateController.text,
+        endDate: _endDateController.text,
+        status: _statusController.text,
+      ));
+      // Clear text fields after adding task
+      _taskController.clear();
+      _descriptionController.clear();
+      _beginDateController.clear();
+      _endDateController.clear();
+      _statusController.clear();
+    });
+  }
+}
+
+class Task {
+  final String name;
+  final String description;
+  final String beginDate;
+  final String endDate;
+  final String status;
+
+  Task({
+    required this.name,
+    required this.description,
+    required this.beginDate,
+    required this.endDate,
+    required this.status,
+  });
+}

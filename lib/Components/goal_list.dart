@@ -1,4 +1,4 @@
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, unused_import
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -44,23 +44,23 @@ class GoalPage extends StatefulWidget {
 class _GoalPageState extends State<GoalPage> {
   late Future<List<Goal>> _goalListFuture;
 
-  @override
-  void initState() {
-    super.initState();
-    _goalListFuture = _fetchGoalList();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _goalListFuture = _fetchGoalList();
+  // }
 
-  Future<List<Goal>> _fetchGoalList() async {
-    final Uri url = Uri.parse('http://127.0.0.1:5000/api/goals');
-    final response = await http.get(url);
+  // Future<List<Goal>> _fetchGoalList() async {
+  //   final Uri url = Uri.parse('http://127.0.0.1:5000/api/goals');
+  //   final response = await http.get(url);
 
-    if (response.statusCode == 200) {
-      final List<dynamic> goalsJson = json.decode(response.body);
-      return goalsJson.map((goalJson) => Goal.fromJson(goalJson)).toList();
-    } else {
-      throw Exception('Failed to fetch goal list');
-    }
-  }
+  //   if (response.statusCode == 200) {
+  //     final List<dynamic> goalsJson = json.decode(response.body)['goals'];
+  //     return goalsJson.map((goalJson) => Goal.fromJson(goalJson)).toList();
+  //   } else {
+  //     throw Exception('Failed to fetch goal list');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -121,21 +121,6 @@ class GoalList extends StatelessWidget {
                     fontSize: 18.0,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
-                const SizedBox(height: 8.0),
-                Text(
-                  'Description: ${goal.description}',
-                  style: const TextStyle(fontSize: 16.0),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  'URL: ${goal.url}',
-                  style: const TextStyle(fontSize: 16.0),
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  'Status: ${goal.status}',
-                  style: const TextStyle(fontSize: 16.0),
                 ),
                 const SizedBox(height: 4.0),
                 Row(

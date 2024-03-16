@@ -1,4 +1,4 @@
-// ignore_for_file: unused_import
+// ignore_for_file: unused_import, avoid_print, duplicate_ignore
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -182,7 +182,7 @@ class _GoalPageState extends State<GoalPage> {
 
       if (response.statusCode == 201) {
         // Successfully saved to the database
-        _showSuccessDialog();
+        //_showSuccessDialog();
         // Fetch updated list of goals from the server
         final Goal newGoal = Goal(
           name: _goalNameController.text,
@@ -205,48 +205,71 @@ class _GoalPageState extends State<GoalPage> {
         });
       } else {
         // Failed to save to the database
-        _showErrorDialog();
+        //_showErrorDialog();
       }
     }
   }
 
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Success'),
-          content: const Text('Goal submitted successfully'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    // Fetch goals data when the widget is initialized
+    _fetchUpdatedGoals();
   }
 
-  void _showErrorDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Error'),
-          content: const Text('Failed to submit goal'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _fetchUpdatedGoals() async {
+    final Uri url = Uri.parse('http://127.0.0.1:5000/api/goals');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> goalsJson = json.decode(response.body)['goals'];
+      final List<Goal> updatedGoals =
+          goalsJson.map((goalJson) => Goal.fromJson(goalJson)).toList();
+      setState(() {
+        enteredGoals = updatedGoals;
+      });
+    } else {
+      print('Failed to fetch updated goal list');
+    }
   }
+
+  // void _showSuccessDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Success'),
+  //         content: const Text('Goal submitted successfully'),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: const Text('OK'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
+  // void _showErrorDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Error'),
+  //         content: const Text('Failed to submit goal'),
+  //         actions: <Widget>[
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: const Text('OK'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 }

@@ -1,22 +1,29 @@
-// ignore_for_file: dead_code
+// ignore_for_file: dead_code, use_super_parameters, library_private_types_in_public_api, use_build_context_synchronously
+
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
 
   String emailErrorText = '';
   String passwordErrorText = '';
+  String usernameErrorText = '';
+  String confirmPasswordErrorText = '';
+  bool isLoginPage = true;
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +40,9 @@ class _LoginPageState extends State<LoginPage> {
                   "Welcome to Kavigai",
                   style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                 ),
-                const Text(
-                  "Sign in Page",
-                  style: TextStyle(
+                Text(
+                  isLoginPage ? "Sign in Page" : "Sign up Page",
+                  style: const TextStyle(
                       fontSize: 30,
                       color: Color.fromARGB(255, 3, 5, 133),
                       fontWeight: FontWeight.bold),
@@ -47,6 +54,22 @@ class _LoginPageState extends State<LoginPage> {
                     height: 150,
                   ),
                 ),
+                const SizedBox(
+                  height: 15,
+                ),
+                if (!isLoginPage)
+                  TextField(
+                    controller: usernameController,
+                    decoration: InputDecoration(
+                      labelText: "Enter Username",
+                      labelStyle:
+                          TextStyle(fontSize: 15, color: Colors.grey.shade400),
+                      errorText: usernameErrorText,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                 const SizedBox(
                   height: 15,
                 ),
@@ -78,24 +101,46 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
+                if (!isLoginPage) ...[
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  TextField(
+                    controller: confirmPasswordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: "Confirm Password",
+                      labelStyle:
+                          TextStyle(fontSize: 15, color: Colors.grey.shade400),
+                      errorText: confirmPasswordErrorText,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(
                   height: 5,
                 ),
-                const Align(
-                  alignment: Alignment.bottomRight,
-                  child: Text(
-                    "Forget Password?",
-                    style:
-                        TextStyle(fontSize: 15, fontWeight: FontWeight.normal),
+                if (isLoginPage)
+                  const Align(
+                    alignment: Alignment.bottomRight,
+                    child: Text(
+                      "Forget Password?",
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.normal),
+                    ),
                   ),
-                ),
                 const SizedBox(
                   height: 15,
                 ),
                 GestureDetector(
                   onTap: () {
-                    // Add logic for form validation and authentication
-                    _handleLogin();
+                    if (isLoginPage) {
+                      _handleLogin();
+                    } else {
+                      _handleSignUp();
+                    }
                   },
                   child: Container(
                     alignment: Alignment.center,
@@ -105,9 +150,9 @@ class _LoginPageState extends State<LoginPage> {
                       color: const Color.fromARGB(255, 35, 245, 245),
                       borderRadius: BorderRadius.circular(5),
                     ),
-                    child: const Text(
-                      "Login ",
-                      style: TextStyle(
+                    child: Text(
+                      isLoginPage ? "Login" : "Sign Up",
+                      style: const TextStyle(
                         color: Color.fromARGB(255, 0, 0, 0),
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -118,22 +163,31 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(
                   height: 15,
                 ),
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "I'm a new User - ",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      isLoginPage
+                          ? "I'm a new User - "
+                          : "Already have an account? ",
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      "Sign Up",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color.fromARGB(255, 211, 136, 23),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isLoginPage = !isLoginPage;
+                        });
+                      },
+                      child: Text(
+                        isLoginPage ? "Sign Up" : "Login",
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 211, 136, 23),
+                        ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ],
@@ -196,6 +250,106 @@ class _LoginPageState extends State<LoginPage> {
       // You may display an error message or take other actions.
     }
   }
+
+  Future<void> _handleSignUp() async {
+    // Perform form validation
+    if (usernameController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        confirmPasswordController.text.isEmpty) {
+      setState(() {
+        usernameErrorText =
+            usernameController.text.isEmpty ? 'Username is required' : '';
+        emailErrorText =
+            emailController.text.isEmpty ? 'Email is required' : '';
+        passwordErrorText =
+            passwordController.text.isEmpty ? 'Password is required' : '';
+        confirmPasswordErrorText = confirmPasswordController.text.isEmpty
+            ? 'Confirm Password is required'
+            : '';
+      });
+      return;
+    } else {
+      // Check if the entered email follows a valid format
+      bool isEmailValid = _isEmailValid(emailController.text);
+
+      if (!isEmailValid) {
+        setState(() {
+          emailErrorText = 'Invalid email format';
+          passwordErrorText = '';
+          confirmPasswordErrorText = '';
+        });
+        return;
+      } else {
+        setState(() {
+          emailErrorText = '';
+          passwordErrorText = '';
+          confirmPasswordErrorText = '';
+        });
+      }
+
+      // Check if the password meets the minimum length requirement
+      if (passwordController.text.length < 8) {
+        setState(() {
+          passwordErrorText = 'Password must be at least 8 characters long';
+          confirmPasswordErrorText = '';
+        });
+        return;
+      } else {
+        setState(() {
+          passwordErrorText = '';
+        });
+      }
+
+      // Check if password and confirm password match
+      if (passwordController.text != confirmPasswordController.text) {
+        setState(() {
+          confirmPasswordErrorText = 'Passwords do not match';
+        });
+        return;
+      } else {
+        setState(() {
+          confirmPasswordErrorText = '';
+        });
+      }
+    }
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:5000/api/signup'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': usernameController.text,
+          'email': emailController.text,
+          'password': passwordController.text,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        // Registration successful, navigate to home page
+        Navigator.pushNamed(context, '/home');
+      } else {
+        // Registration failed, display error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Registration failed: ${response.body}'),
+          ),
+        );
+      }
+    } catch (e) {
+      // Error occurred during registration
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+        ),
+      );
+    }
+  }
+
+  // Add your sign-up logic here.
+  // For demonstration purposes, assume sign-up is successful.
+  bool signUpSuccessful = true;
 
   bool _isEmailValid(String email) {
     // Use the built-in EmailValidator class from the 'email_validator' package

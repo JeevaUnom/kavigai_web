@@ -1,0 +1,12 @@
+Request : curl --location --request GET 'http://127.0.0.1:5000/api/todos
+
+
+Response:
+{
+    "todoName": "JavaScript",
+    "todoDescription": "Learn the basics of javascript. Then implement the javascript logic on the created sample web page",
+    "todoBeginDate": "2024-03-20",
+    "todoEndDate": "2024-03-25",
+    "todoStatus": "In Progress",
+    "id": 1
+}

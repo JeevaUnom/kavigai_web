@@ -26,6 +26,22 @@ class User(db.Model):
     email = db.Column('email', db.String(100), nullable=False, unique=True)
     password = db.Column('password', db.String(100), nullable=False)
     
+class Todo(db.Model):
+    __tablename__ = 'todo'
+
+    todoId = db.Column('todoid', db.Integer, primary_key=True)
+    todoName = db.Column('todoname', db.String(255), nullable=False)
+    todoDescription = db.Column('tododescription', db.Text)
+    todoBeginDate = db.Column('todobegindate', db.Date, nullable=False)
+    todoEndDate = db.Column('todoenddate', db.Date, nullable=False)
+    todoStatus = db.Column('todostatus', db.String(50))
+    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Todo {self.todoId}: {self.todoName}>'
+
+
+    
 class Book(db.Model):
     __tablename__ = 'books'
 
@@ -53,8 +69,8 @@ def get_goals():
             'id': goal.id,
             'name': goal.name,
             'description': goal.description,
-            'begin_date': goal.begin_date.strftime('%Y-%m-%d'),
-            'end_date': goal.end_date.strftime('%Y-%m-%d'),
+            'beginDate': goal.begin_date.strftime('%Y-%m-%d'),
+            'endDate': goal.end_date.strftime('%Y-%m-%d'),
             'url': goal.url,
             'status': goal.status
         })
@@ -71,8 +87,8 @@ def get_goal(id):
         'id': goal.id,
         'name': goal.name,
         'description': goal.description,
-        'begin_date': goal.begin_date.strftime('%Y-%m-%d'),
-        'end_date': goal.end_date.strftime('%Y-%m-%d'),
+        'beginDate': goal.begin_date.strftime('%Y-%m-%d'),
+        'endDate': goal.end_date.strftime('%Y-%m-%d'),
         'url': goal.url,
         'status': goal.status
     })
@@ -176,5 +192,114 @@ def get_all_books():
 
     # Return list of books in JSON format
     return jsonify({'books': books_list})
+
+# Get all todos
+@app.route('/api/todos', methods=['GET'])
+def get_todos():
+    todos = Todo.query.all()
+    todos_list = []
+    for todo in todos:
+        todos_list.append({
+            'todoId': todo.todoId,
+            'todoName': todo.todoName,
+            'todoDescription': todo.todoDescription,
+            'todoBeginDate': todo.todoBeginDate.strftime('%Y-%m-%d'),
+            'todoEndDate': todo.todoEndDate.strftime('%Y-%m-%d'),
+            'todoStatus': todo.todoStatus,
+            'id': todo.id
+        })
+    return jsonify({'todos': todos_list})
+
+# Get a single todo by ID
+@app.route('/api/todos/<int:todoId>', methods=['GET'])
+def get_todo(todoId):
+    todo = Todo.query.get(todoId)
+    if todo is None:
+        return jsonify({'message': 'Todo not found'}), 404
+    
+    return jsonify({
+        'todoId': todo.todoId,
+        'todoName': todo.todoName,
+        'todoDescription': todo.todoDescription,
+        'todoBeginDate': todo.todoBeginDate.strftime('%Y-%m-%d'),
+        'todoEndDate': todo.todoEndDate.strftime('%Y-%m-%d'),
+        'todoStatus': todo.todoStatus,
+        'id': todo.id
+    })
+
+# Create a new todo
+@app.route('/api/todos', methods=['POST'])
+def create_todo():
+    data = request.json
+    # Extract data from request
+    todoName = data.get('todoName')
+    todoDescription = data.get('todoDescription')
+    todoBeginDate_str = data.get('todoBeginDate')
+    todoEndDate_str = data.get('todoEndDate')
+    todoStatus = data.get('todoStatus')
+
+    # Validate data
+    if not todoName or not todoBeginDate_str or not todoEndDate_str:
+        return jsonify({'message': 'TodoName, todoBeginDate, and todoEndDate are required'}), 400
+
+    try:
+        # Convert dates to datetime objects
+        todoBeginDate = datetime.strptime(todoBeginDate_str, '%Y-%m-%d').date()
+        todoEndDate = datetime.strptime(todoEndDate_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'message': 'Invalid date format. Please use YYYY-MM-DD'}), 400
+
+    # Create new todo object
+    todo = Todo(
+        todoName=todoName,
+        todoDescription=todoDescription,
+        todoBeginDate=todoBeginDate,
+        todoEndDate=todoEndDate,
+        todoStatus=todoStatus,
+        id=data.get('id')
+    )
+
+    # Add new todo to database
+    db.session.add(todo)
+    db.session.commit()
+
+    return jsonify({'message': 'Todo created successfully'}), 201
+
+# Update an existing todo
+@app.route('/api/todos/<int:todoId>', methods=['PUT'])
+def update_todo(todoId):
+    data = request.json
+    # Get the existing todo
+    todo = Todo.query.get(todoId)
+    if todo is None:
+        return jsonify({'message': 'Todo not found'}), 404
+
+    # Update the todo properties
+    todo.todoName = data.get('todoName', todo.todoName)
+    todo.todoDescription = data.get('todoDescription', todo.todoDescription)
+    todo.todoBeginDate = datetime.strptime(data.get('todoBeginDate', str(todo.todoBeginDate)), '%Y-%m-%d').date()
+    todo.todoEndDate = datetime.strptime(data.get('todoEndDate', str(todo.todoEndDate)), '%Y-%m-%d').date()
+    todo.todoStatus = data.get('todoStatus', todo.todoStatus)
+    todo.id = data.get('id', todo.id)
+
+    # Commit changes to the database
+    db.session.commit()
+
+    return jsonify({'message': 'Todo updated successfully'}), 200
+
+# Delete an existing todo
+@app.route('/api/todos/<int:todoId>', methods=['DELETE'])
+def delete_todo(todoId):
+    # Get the todo to delete
+    todo = Todo.query.get(todoId)
+    if todo is None:
+        return jsonify({'message': 'Todo not found'}), 404
+
+    # Delete the todo from the database
+    db.session.delete(todo)
+    db.session.commit()
+
+    return jsonify({'message': 'Todo deleted successfully'}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)

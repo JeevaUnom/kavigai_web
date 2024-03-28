@@ -29,3 +29,15 @@ CREATE TABLE books (
     number_of_peoples_rated INTEGER,
     description TEXT
 );
+
+CREATE TABLE todo (
+    todoId SERIAL PRIMARY KEY,
+    todoName VARCHAR(255) NOT NULL, 
+    todoDescription TEXT,
+    todoBeginDate DATE,
+    todoEndDate DATE,
+    todoStatus VARCHAR(50),
+    id INT,
+    FOREIGN KEY (id) REFERENCES goal(id)
+);
+

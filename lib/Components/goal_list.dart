@@ -26,8 +26,8 @@ class Goal {
     return Goal(
       name: json['name'],
       description: json['description'],
-      beginDate: json['begin_date'],
-      endDate: json['end_date'],
+      beginDate: json['beginDate'],
+      endDate: json['endDate'],
       url: json['url'],
       status: json['status'],
     );

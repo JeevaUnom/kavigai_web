@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:kavigai/Components/Navbar.dart';
 import 'package:kavigai/Components/goal_list.dart';
 import '../pages/goal.dart'; // Import the Goal class
-import '../Components/recommendation_list.dart'; // Import the recommendation list page
+import '../Components/service_list.dart'; // Import the recommendation list page
+import 'package:http/http.dart' as http;
 
 class GoalDetailPage extends StatefulWidget {
   final Goal goal;
@@ -17,6 +18,8 @@ class GoalDetailPage extends StatefulWidget {
 
 class _GoalDetailPageState extends State<GoalDetailPage> {
   String _selectedService = '--select service--'; // Dropdown value holder
+  // ignore: prefer_final_fields
+  List<Todo> _todos = []; // List to hold todos
 
   final List<String> _services = [
     '--select service--',
@@ -55,6 +58,20 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                       onPressed: () {
                         // Handle adding details here
                         // You can implement the logic to add details for the selected service
+                        if (_selectedService == 'ToDo') {
+                          // Navigate to TodoForm page
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TodoForm(
+                                onSave: (todo) {
+                                  // Handle saving todo details here
+                                  print('Todo saved: $todo');
+                                },
+                              ),
+                            ),
+                          );
+                        }
                       },
                       icon: const Icon(Icons.add),
                     ),
@@ -62,7 +79,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'This is where your custom recommendation UI goes for $_selectedService.',
+                  'This is where custom recommendation UI goes for $_selectedService.',
                 ),
               ],
             ),
@@ -70,6 +87,12 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         );
       },
     );
+  }
+
+  void _addTodoToList(Todo todo) {
+    setState(() {
+      _todos.add(todo);
+    });
   }
 
   @override
@@ -110,17 +133,25 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                 );
               }).toList(),
             ),
-            // const SizedBox(height: 20),
-            // ElevatedButton(
-            //   onPressed: () {
-            //     // Add service logic here
-            //     if (_selectedService != '--select service--') {
-            //       // Perform actions based on the selected service
-            //       print('Selected service: $_selectedService');
-            //     }
-            //   },
-            //   child: const Text('Add Service'),
-            // ),
+            SizedBox(height: 20),
+            Text(
+              'List of Services:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _todos.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(_todos[index].name),
+                    subtitle: Text(
+                      '${_todos[index].beginDate.toString().substring(0, 10)} - ${_todos[index].endDate.toString().substring(0, 10)}',
+                    ),
+                    // Other details...
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),

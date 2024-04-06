@@ -1,11 +1,8 @@
-// ignore_for_file: library_private_types_in_public_api, unused_import, use_super_parameters
-
 import 'package:flutter/material.dart';
 import 'package:kavigai/Components/Navbar.dart';
 import 'package:kavigai/Components/goal_list.dart';
 import '../pages/goal.dart'; // Import the Goal class
-import '../Components/service_list.dart'; // Import the recommendation list page
-import 'package:http/http.dart' as http;
+import 'service_todo.dart'; // Import the recommendation list page
 
 class GoalDetailPage extends StatefulWidget {
   final Goal goal;
@@ -18,7 +15,6 @@ class GoalDetailPage extends StatefulWidget {
 
 class _GoalDetailPageState extends State<GoalDetailPage> {
   String _selectedService = '--select service--'; // Dropdown value holder
-  // ignore: prefer_final_fields
   List<Todo> _todos = []; // List to hold todos
 
   final List<String> _services = [
@@ -29,58 +25,59 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     'Meeting'
   ];
 
-  void _handleServiceSelection(String selectedService) {
+  void _addTodoToList(Todo todo) {
     setState(() {
-      _selectedService = selectedService;
+      _todos.add(todo);
     });
+  }
 
+  void _addExistingTodoToList(Todo todo) {
+    setState(() {
+      _todos.add(todo);
+    });
+  }
+
+  void _handleServiceSelection(String selectedService) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          child: Container(
-            padding: const EdgeInsets.all(16.0),
+        return AlertDialog(
+          content: Container(
+            width: double.maxFinite,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 10),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Text(
-                      'Recommendation for $_selectedService',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
+                    ElevatedButton(
                       onPressed: () {
-                        // Handle adding details here
-                        // You can implement the logic to add details for the selected service
-                        if (_selectedService == 'ToDo') {
-                          // Navigate to TodoForm page
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TodoForm(
-                                onSave: (todo) {
-                                  // Handle saving todo details here
-                                  print('Todo saved: $todo');
-                                },
-                              ),
-                            ),
-                          );
-                        }
+                        Navigator.pop(context);
+                        _handleServiceAction(selectedService, 'New');
                       },
-                      icon: const Icon(Icons.add),
+                      child: const Text('New'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _handleServiceAction(selectedService, 'Existing');
+                      },
+                      child: const Text('Existing'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _handleServiceAction(selectedService, 'Recommendation');
+                      },
+                      child: const Text('Recommend'),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  'This is where custom recommendation UI goes for $_selectedService.',
-                ),
+                const SizedBox(height: 20),
+                // Content area to display form or list based on the selected service
+                _buildServiceContent(selectedService),
               ],
             ),
           ),
@@ -89,10 +86,83 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     );
   }
 
-  void _addTodoToList(Todo todo) {
-    setState(() {
-      _todos.add(todo);
-    });
+  Widget _buildServiceContent(String selectedService) {
+    switch (selectedService) {
+      case 'ToDo':
+        return SizedBox(
+          height: 100, // Adjust the height as per your requirement
+          child: SingleChildScrollView(
+            child: TodoForm(
+              onSave: (todo) {
+                _addTodoToList(todo);
+                print('Todo saved: $todo');
+                Navigator.pop(context);
+              },
+            ),
+          ),
+        );
+      case 'Existing':
+        return SizedBox(
+          height: 300, // Adjust the height as per your requirement
+          child: SingleChildScrollView(
+            child: ExistingTodosDialog(
+              onSelect: (todo) {},
+            ),
+          ),
+        );
+      // Add cases for other services here
+      default:
+        return const SizedBox();
+    }
+  }
+
+  void _handleServiceAction(String selectedService, String action) {
+    switch (action) {
+      case 'New':
+        if (selectedService == 'ToDo') {
+          // Open the TodoForm within the dialog box
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: TodoForm(
+                  onSave: (todo) {
+                    _addTodoToList(todo);
+                    print('Todo saved: $todo');
+                    // Navigator.pop(context);
+                  },
+                ),
+              );
+            },
+          );
+        } else {
+          print('Action for $selectedService is not defined.');
+        }
+        break;
+      case 'Existing':
+        if (selectedService == 'ToDo') {
+          // Open the ExistingTodosDialog within the dialog box
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: ExistingTodosDialog(
+                  onSelect: _addExistingTodoToList,
+                ),
+              );
+            },
+          );
+        } else {
+          print('Action for $selectedService is not defined.');
+        }
+        break;
+
+      case 'Recommendation':
+        // Handle recommendation button action
+        break;
+      default:
+        print('Action for $selectedService is not defined.');
+    }
   }
 
   @override
@@ -133,8 +203,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                 );
               }).toList(),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'List of Services:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),

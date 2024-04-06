@@ -18,7 +18,7 @@ class ProfilePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile Page'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Color.fromARGB(255, 241, 244, 247),
       ),
       body: Column(
         children: [

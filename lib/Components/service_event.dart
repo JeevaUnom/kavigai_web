@@ -1,4 +1,4 @@
-// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api
+// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api, use_build_context_synchronously, unused_field
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -47,21 +47,21 @@ class _EventFormState extends State<EventForm> {
   late String _speaker;
   late String _eventMode;
   late String _description;
-  TextEditingController _domainController = TextEditingController();
-  TextEditingController _titleController = TextEditingController();
-  TextEditingController _beginDateController = TextEditingController();
-  TextEditingController _endDateController = TextEditingController();
-  TextEditingController _locationController = TextEditingController();
-  TextEditingController _speakerController = TextEditingController();
-  TextEditingController _eventModeController = TextEditingController();
-  TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _domainController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _beginDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _speakerController = TextEditingController();
+  final TextEditingController _eventModeController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _beginDate = DateTime.now();
     _endDate = _beginDate
-        .add(Duration(hours: 2)); // Default end date 2 hours after begin date
+        .add(const Duration(hours: 2)); // Default end date 2 hours after begin date
   }
 
   @override
@@ -149,7 +149,7 @@ class _EventFormState extends State<EventForm> {
                         _beginDateController.text =
                             _beginDate.toString().substring(0, 16);
                         // Set default end date 2 hours after begin date
-                        _endDate = _beginDate.add(Duration(hours: 2));
+                        _endDate = _beginDate.add(const Duration(hours: 2));
                         _endDateController.text =
                             _endDate.toString().substring(0, 16);
                       });
@@ -281,7 +281,7 @@ class ExistingEventsDialog extends StatelessWidget {
       future: _fetchEvents(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (snapshot.hasData) {
@@ -293,9 +293,9 @@ class ExistingEventsDialog extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Existing Events',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -311,7 +311,7 @@ class ExistingEventsDialog extends StatelessWidget {
                             'Begin Date: ${events[index].beginDate.toString().substring(0, 16)}\nEnd Date: ${events[index].endDate.toString().substring(0, 16)}\nLocation: ${events[index].location}',
                           ),
                           trailing: IconButton(
-                            icon: Icon(Icons.add),
+                            icon: const Icon(Icons.add),
                             onPressed: () {
                               onSelect(events[index]);
                               Navigator.pop(

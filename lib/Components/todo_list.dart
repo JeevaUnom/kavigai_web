@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'functions.dart'; // Import functions.dart where the functions are defined
+import 'functions.dart'; 
 
 class TodoList extends StatefulWidget {
   final TextEditingController controller;

@@ -4,49 +4,51 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class Todo {
-  final String name;
+class Meeting {
+  final String title;
+  final DateTime beginDate;
+  final DateTime endDate;
   final String description;
-  DateTime beginDate;
-  DateTime endDate;
   final String status;
 
-  Todo({
-    required this.name,
-    required this.description,
+  Meeting({
+    required this.title,
     required this.beginDate,
     required this.endDate,
+    required this.description,
     required this.status,
   });
 }
 
-class TodoForm extends StatefulWidget {
-  final Function(Todo) onSave;
+class MeetingForm extends StatefulWidget {
+  final Function(Meeting) onSave;
 
-  const TodoForm({required this.onSave});
+  const MeetingForm({required this.onSave});
   @override
-  _TodoFormState createState() => _TodoFormState();
+  _MeetingFormState createState() => _MeetingFormState();
 }
 
-class _TodoFormState extends State<TodoForm> {
+class _MeetingFormState extends State<MeetingForm> {
   final _formKey = GlobalKey<FormState>();
+  late String _title;
   late DateTime _beginDate;
   late DateTime _endDate;
+  late String _description;
   late String _status;
-  TextEditingController _nameController = TextEditingController();
+  TextEditingController _titleController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _beginDate = DateTime.now();
-    _endDate = _beginDate.add(const Duration(days: 7));
-    _status = 'New';
+    _endDate = _beginDate.add(const Duration(hours: 1));
+    _status = 'Planned';
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -55,7 +57,7 @@ class _TodoFormState extends State<TodoForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Todo Form'),
+        title: const Text('Meeting Form'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -65,31 +67,18 @@ class _TodoFormState extends State<TodoForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Todo Details',
+                'Meeting Details',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               TextFormField(
-                controller: _nameController,
+                controller: _titleController,
                 decoration: const InputDecoration(
-                  labelText: 'Todo Name *',
+                  labelText: 'Meeting Title *',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter todo name';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Todo Description *',
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter todo description';
+                    return 'Please enter meeting title';
                   }
                   return null;
                 },
@@ -115,7 +104,7 @@ class _TodoFormState extends State<TodoForm> {
                                 _beginDate = selectedDate;
                                 if (_beginDate.isAfter(_endDate)) {
                                   _endDate =
-                                      _beginDate.add(const Duration(days: 7));
+                                      _beginDate.add(const Duration(hours: 1));
                                 }
                               });
                             }
@@ -124,7 +113,7 @@ class _TodoFormState extends State<TodoForm> {
                         ),
                       ),
                       controller: TextEditingController(
-                        text: _beginDate.toString().substring(0, 10),
+                        text: _beginDate.toString().substring(0, 16),
                       ),
                     ),
                   ),
@@ -146,7 +135,8 @@ class _TodoFormState extends State<TodoForm> {
                               setState(() {
                                 _endDate = selectedDate;
                                 if (_endDate.isBefore(_beginDate)) {
-                                  _beginDate = _endDate;
+                                  _beginDate = _endDate
+                                      .subtract(const Duration(hours: 1));
                                 }
                               });
                             }
@@ -155,11 +145,19 @@ class _TodoFormState extends State<TodoForm> {
                         ),
                       ),
                       controller: TextEditingController(
-                        text: _endDate.toString().substring(0, 10),
+                        text: _endDate.toString().substring(0, 16),
                       ),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                ),
+                maxLines: 3,
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
@@ -169,7 +167,7 @@ class _TodoFormState extends State<TodoForm> {
                     _status = newValue!;
                   });
                 },
-                items: ['New', 'In Progress', 'Completed', 'Optional']
+                items: ['Planned', 'In Progress', 'Completed', 'Cancelled']
                     .map<DropdownMenuItem<String>>(
                       (String value) => DropdownMenuItem<String>(
                         value: value,
@@ -185,14 +183,14 @@ class _TodoFormState extends State<TodoForm> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    Todo todo = Todo(
-                      name: _nameController.text,
-                      description: _descriptionController.text,
+                    Meeting meeting = Meeting(
+                      title: _titleController.text,
                       beginDate: _beginDate,
                       endDate: _endDate,
+                      description: _descriptionController.text,
                       status: _status,
                     );
-                    widget.onSave(todo);
+                    widget.onSave(meeting);
                     // Navigator.pop(context);
                   }
                 },
@@ -206,41 +204,43 @@ class _TodoFormState extends State<TodoForm> {
   }
 }
 
-class ExistingTodosDialog extends StatelessWidget {
-  final Function(Todo) onSelect; // Define onSelect function
+class ExistingMeetingsDialog extends StatelessWidget {
+  final Function(Meeting) onSelect; // Define onSelect function
 
-  const ExistingTodosDialog({required this.onSelect});
-  Future<List<Todo>> _fetchTodos() async {
+  const ExistingMeetingsDialog({required this.onSelect});
+  // Implement the function to fetch existing meetings from the server
+  // Replace the URL with your actual API endpoint
+  Future<List<Meeting>> _fetchMeetings() async {
     final response =
-        await http.get(Uri.parse('http://127.0.0.1:5000/api/todos'));
+        await http.get(Uri.parse('http://127.0.0.1:5000/api/meetings'));
     if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body)['todos'];
-      List<Todo> todos = data.map((item) {
-        return Todo(
-          name: item['todoName'],
-          description: item['todoDescription'],
-          beginDate: DateTime.parse(item['todoBeginDate']),
-          endDate: DateTime.parse(item['todoEndDate']),
-          status: item['todoStatus'],
+      List<dynamic> data = jsonDecode(response.body)['meetings'];
+      List<Meeting> meetings = data.map((item) {
+        return Meeting(
+          title: item['title'],
+          beginDate: DateTime.parse(item['beginDate']),
+          endDate: DateTime.parse(item['endDate']),
+          description: item['description'],
+          status: item['status'],
         );
       }).toList();
-      return todos;
+      return meetings;
     } else {
-      throw Exception('Failed to load todos');
+      throw Exception('Failed to load meetings');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Todo>>(
-      future: _fetchTodos(), // Pass any required date here
+    return FutureBuilder<List<Meeting>>(
+      future: _fetchMeetings(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (snapshot.hasData) {
-          List<Todo> todos = snapshot.data!;
+          List<Meeting> meetings = snapshot.data!;
           return Dialog(
             child: Container(
               padding: const EdgeInsets.all(16.0),
@@ -249,7 +249,7 @@ class ExistingTodosDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Existing Todos ',
+                    'Existing Meetings',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -258,19 +258,19 @@ class ExistingTodosDialog extends StatelessWidget {
                   const SizedBox(height: 10),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: todos.length,
+                      itemCount: meetings.length,
                       itemBuilder: (context, index) {
                         return ListTile(
-                          title: Text(todos[index].name),
+                          title: Text(meetings[index].title),
                           subtitle: Text(
-                            'Status: ${todos[index].status}',
+                            'Begin: ${meetings[index].beginDate.toString().substring(0, 16)}\nEnd: ${meetings[index].endDate.toString().substring(0, 16)}',
                           ),
                           trailing: IconButton(
                             icon: Icon(Icons.add),
                             onPressed: () {
-                              onSelect(todos[index]);
-                              // Navigator.pop(
-                              // context); // Close the dialog after adding todo
+                              onSelect(meetings[index]);
+                              Navigator.pop(
+                                  context); // Close the dialog after selecting meeting
                             },
                           ),
                           // Other details...

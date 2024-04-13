@@ -1,7 +1,12 @@
+// ignore_for_file: unused_import, avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:kavigai/Components/Navbar.dart';
 import 'package:kavigai/Components/goal_list.dart';
-import '../pages/goal.dart'; // Import the Goal class
+// import '../pages/goal.dart'; // Import the Goal class
+import 'service_book.dart';
+import 'service_event.dart';
+import 'service_meeting.dart';
 import 'service_todo.dart'; // Import the recommendation list page
 
 class GoalDetailPage extends StatefulWidget {
@@ -15,14 +20,17 @@ class GoalDetailPage extends StatefulWidget {
 
 class _GoalDetailPageState extends State<GoalDetailPage> {
   String _selectedService = '--select service--'; // Dropdown value holder
-  List<Todo> _todos = []; // List to hold todos
+  final List<Todo> _todos = []; // List to hold todos
+  final List<Book> _books = [];
+  final List<Meeting> _meetings = [];
+  final List<Event> _events = [];
 
   final List<String> _services = [
     '--select service--',
     'ToDo',
     'Books',
     'Events',
-    'Meeting'
+    'Meetings'
   ];
 
   void _addTodoToList(Todo todo) {
@@ -34,6 +42,31 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
   void _addExistingTodoToList(Todo todo) {
     setState(() {
       _todos.add(todo);
+    });
+  }
+
+  // Methods to handle other service actions
+  void _addBookToList(Book book) {
+    setState(() {
+      _books.add(book);
+    });
+  }
+
+  void _addExistingBookToList(Book book) {
+    setState(() {
+      _books.add(book);
+    });
+  }
+
+  void _addMeetingToList(Meeting meeting) {
+    setState(() {
+      _meetings.add(meeting);
+    });
+  }
+
+  void _addEventToList(Event event) {
+    setState(() {
+      _events.add(event);
     });
   }
 
@@ -77,43 +110,13 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                 ),
                 const SizedBox(height: 20),
                 // Content area to display form or list based on the selected service
-                _buildServiceContent(selectedService),
+                // _buildServiceContent(selectedService),
               ],
             ),
           ),
         );
       },
     );
-  }
-
-  Widget _buildServiceContent(String selectedService) {
-    switch (selectedService) {
-      case 'ToDo':
-        return SizedBox(
-          height: 100, // Adjust the height as per your requirement
-          child: SingleChildScrollView(
-            child: TodoForm(
-              onSave: (todo) {
-                _addTodoToList(todo);
-                print('Todo saved: $todo');
-                Navigator.pop(context);
-              },
-            ),
-          ),
-        );
-      case 'Existing':
-        return SizedBox(
-          height: 300, // Adjust the height as per your requirement
-          child: SingleChildScrollView(
-            child: ExistingTodosDialog(
-              onSelect: (todo) {},
-            ),
-          ),
-        );
-      // Add cases for other services here
-      default:
-        return const SizedBox();
-    }
   }
 
   void _handleServiceAction(String selectedService, String action) {
@@ -129,7 +132,56 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                   onSave: (todo) {
                     _addTodoToList(todo);
                     print('Todo saved: $todo');
-                    // Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                ),
+              );
+            },
+          );
+        } else if (selectedService == 'Books') {
+          // Open the BookForm within the dialog box
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: BookForm(
+                  onSave: (book) {
+                    _addBookToList(book);
+                    print('Book saved: $book');
+                    Navigator.pop(context);
+                  },
+                  // onAddToGoalDetails: (Book) {},
+                ),
+              );
+            },
+          );
+        } else if (selectedService == 'Meetings') {
+          // Open the MeetingForm within the dialog box
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: MeetingForm(
+                  onSave: (meeting) {
+                    _addMeetingToList(meeting);
+                    print('Meeting saved: $meeting');
+                    Navigator.pop(context);
+                  },
+                ),
+              );
+            },
+          );
+        } else if (selectedService == 'Events') {
+          // Open the EventForm within the dialog box
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: EventForm(
+                  onSave: (event) {
+                    _addEventToList(event);
+                    print('Event saved: $event');
+                    Navigator.pop(context);
                   },
                 ),
               );
@@ -152,6 +204,25 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
               );
             },
           );
+        } else if (selectedService == 'Books') {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: ExistingBooksDialog(
+                  onSelect: _addExistingBookToList,
+                ),
+              );
+            },
+          );
+          // Handle action for selecting existing book
+          // Implement opening book selection dialog
+        } else if (selectedService == 'Meetings') {
+          // Handle action for selecting existing meeting
+          // Implement opening meeting selection dialog
+        } else if (selectedService == 'Events') {
+          // Handle action for selecting existing event
+          // Implement opening event selection dialog
         } else {
           print('Action for $selectedService is not defined.');
         }
@@ -209,19 +280,61 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: _todos.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_todos[index].name),
-                    subtitle: Text(
-                      '${_todos[index].beginDate.toString().substring(0, 10)} - ${_todos[index].endDate.toString().substring(0, 10)}',
-                    ),
-                    // Other details...
-                  );
-                },
-              ),
-            ),
+  child: ListView.builder(
+    itemCount: _todos.length +
+        _meetings.length +
+        _books.length +
+        _events.length, // Combine the lengths of todo, meeting, book, and event lists
+    itemBuilder: (context, index) {
+      if (index < _todos.length) {
+        // If the index is within the range of todos
+        return ListTile(
+          title: Text(_todos[index].name),
+          subtitle: Text(
+            '${_todos[index].beginDate.toString().substring(0, 10)} - ${_todos[index].endDate.toString().substring(0, 10)}',
+          ),
+          // Other todo details...
+        );
+      } else if (index < _todos.length + _meetings.length) {
+        // If the index is within the range of meetings
+        int meetingIndex = index - _todos.length; // Adjust index for meetings list
+        return ListTile(
+          title: Text(_meetings[meetingIndex].title),
+          subtitle: Text(
+            '${_meetings[meetingIndex].beginDate.toString().substring(0, 10)} - ${_meetings[meetingIndex].endDate.toString().substring(0, 10)}',
+          ),
+          // Other meeting details...
+        );
+      } else if (index <
+          _todos.length + _meetings.length + _books.length) {
+        // If the index is within the range of books
+        int bookIndex =
+            index - _todos.length - _meetings.length; // Adjust index for books list
+        return ListTile(
+          title: Text(_books[bookIndex].title),
+          subtitle: Text(
+            'Begin Date: ${_books[bookIndex].beginDate.toString().substring(0, 10)}\nEnd Date: ${_books[bookIndex].endDate.toString().substring(0, 10)}',
+          ),
+          // Other book details...
+        );
+      } else {
+        // If the index is within the range of events
+        int eventIndex = index -
+            _todos.length -
+            _meetings.length -
+            _books.length; // Adjust index for events list
+        return ListTile(
+          title: Text(_events[eventIndex].title),
+          subtitle: Text(
+            'Begin Date: ${_events[eventIndex].beginDate.toString().substring(0, 10)}\nEnd Date: ${_events[eventIndex].endDate.toString().substring(0, 10)}',
+          ),
+          // Other event details...
+        );
+      }
+    },
+  ),
+),
+
           ],
         ),
       ),

@@ -171,8 +171,6 @@ def delete_goal(id):
 def get_all_books():
     # Query all books from the database
     books = Book.query.all()
-
-    # Create a list to store book details
     books_list = []
     for book in books:
         books_list.append({

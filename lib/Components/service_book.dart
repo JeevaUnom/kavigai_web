@@ -11,8 +11,8 @@ class Book {
   final int pageCount;
   final String genre;
   final String status;
-  final DateTime beginDate; // Added beginDate field
-  final DateTime endDate; // Added endDate field
+  DateTime beginDate; // Added beginDate field
+  DateTime endDate; // Added endDate field
 
   Book({
     required this.title,
@@ -43,8 +43,8 @@ class _BookFormState extends State<BookForm> {
   late int _pageCount;
   late String _genre;
   late String _status;
-  DateTime? _beginDate; // New field for begin date
-  DateTime? _endDate; // New field for end date
+  late DateTime _beginDate; // New field for begin date
+  late DateTime _endDate; // New field for end date
   TextEditingController _beginDateController = TextEditingController();
   TextEditingController _endDateController = TextEditingController();
   TextEditingController _titleController = TextEditingController();

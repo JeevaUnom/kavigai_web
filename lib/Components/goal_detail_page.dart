@@ -1,6 +1,7 @@
 // ignore_for_file: unused_import, avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:kavigai/Components/Navbar.dart';
 import 'package:kavigai/Components/goal_list.dart';
 // import '../pages/goal.dart'; // Import the Goal class
@@ -250,7 +251,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
             const NavBar(),
             Text(
               widget.goal.name,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 15),
             Text('Description: ${widget.goal.description}'),
@@ -259,6 +260,44 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
             Text('Begin Date: ${widget.goal.beginDate}'),
             Text('End Date: ${widget.goal.endDate}'),
             const SizedBox(height: 25),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit),
+                      onPressed: () {
+                        // Add update functionality
+                      },
+                    ),
+                    Text('Update'), // Icon label
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () {
+                        // Add delete functionality
+                      },
+                    ),
+                    Text('Delete'), // Icon label
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.share),
+                      onPressed: () {
+                        // Add share functionality
+                      },
+                    ),
+                    Text('Share'), // Icon label
+                  ],
+                ),
+              ],
+            ),
             DropdownButton<String>(
               value: _selectedService,
               onChanged: (newValue) {
@@ -280,63 +319,132 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Expanded(
-  child: ListView.builder(
-    itemCount: _todos.length +
-        _meetings.length +
-        _books.length +
-        _events.length, // Combine the lengths of todo, meeting, book, and event lists
-    itemBuilder: (context, index) {
-      if (index < _todos.length) {
-        // If the index is within the range of todos
-        return ListTile(
-          title: Text(_todos[index].name),
-          subtitle: Text(
-            '${_todos[index].beginDate.toString().substring(0, 10)} - ${_todos[index].endDate.toString().substring(0, 10)}',
-          ),
-          // Other todo details...
-        );
-      } else if (index < _todos.length + _meetings.length) {
-        // If the index is within the range of meetings
-        int meetingIndex = index - _todos.length; // Adjust index for meetings list
-        return ListTile(
-          title: Text(_meetings[meetingIndex].title),
-          subtitle: Text(
-            '${_meetings[meetingIndex].beginDate.toString().substring(0, 10)} - ${_meetings[meetingIndex].endDate.toString().substring(0, 10)}',
-          ),
-          // Other meeting details...
-        );
-      } else if (index <
-          _todos.length + _meetings.length + _books.length) {
-        // If the index is within the range of books
-        int bookIndex =
-            index - _todos.length - _meetings.length; // Adjust index for books list
-        return ListTile(
-          title: Text(_books[bookIndex].title),
-          subtitle: Text(
-            'Begin Date: ${_books[bookIndex].beginDate.toString().substring(0, 10)}\nEnd Date: ${_books[bookIndex].endDate.toString().substring(0, 10)}',
-          ),
-          // Other book details...
-        );
-      } else {
-        // If the index is within the range of events
-        int eventIndex = index -
-            _todos.length -
-            _meetings.length -
-            _books.length; // Adjust index for events list
-        return ListTile(
-          title: Text(_events[eventIndex].title),
-          subtitle: Text(
-            'Begin Date: ${_events[eventIndex].beginDate.toString().substring(0, 10)}\nEnd Date: ${_events[eventIndex].endDate.toString().substring(0, 10)}',
-          ),
-          // Other event details...
-        );
-      }
-    },
-  ),
-),
-
+              child: ListView.builder(
+                itemCount: _todos.length +
+                    _meetings.length +
+                    _books.length +
+                    _events
+                        .length, // Combine the lengths of todo, meeting, book, and event lists
+                itemBuilder: (context, index) {
+                  if (index < _todos.length) {
+                    // If the index is within the range of todos
+                    return _buildListItem(
+                      title: _todos[index].name,
+                      beginDate: _todos[index].beginDate,
+                      endDate: _todos[index].endDate,
+                      onUpdateDate:
+                          (DateTime newBeginDate, DateTime newEndDate) {
+                        setState(() {
+                          _todos[index].beginDate = newBeginDate;
+                          _todos[index].endDate = newEndDate;
+                        });
+                      },
+                    );
+                  } else if (index < _todos.length + _meetings.length) {
+                    // If the index is within the range of meetings
+                    int meetingIndex =
+                        index - _todos.length; // Adjust index for meetings list
+                    return _buildListItem(
+                      title: _meetings[meetingIndex].title,
+                      beginDate: _meetings[meetingIndex].beginDate,
+                      endDate: _meetings[meetingIndex].endDate,
+                      onUpdateDate:
+                          (DateTime newBeginDate, DateTime newEndDate) {
+                        setState(() {
+                          _meetings[meetingIndex].beginDate = newBeginDate;
+                          _meetings[meetingIndex].endDate = newEndDate;
+                        });
+                      },
+                    );
+                  } else if (index <
+                      _todos.length + _meetings.length + _books.length) {
+                    // If the index is within the range of books
+                    int bookIndex = index -
+                        _todos.length -
+                        _meetings.length; // Adjust index for books list
+                    return _buildListItem(
+                      title: _books[bookIndex].title,
+                      beginDate: _books[bookIndex].beginDate,
+                      endDate: _books[bookIndex].endDate,
+                      onUpdateDate:
+                          (DateTime newBeginDate, DateTime newEndDate) {
+                        setState(() {
+                          _books[bookIndex].beginDate = newBeginDate;
+                          _books[bookIndex].endDate = newEndDate;
+                        });
+                      },
+                    );
+                  } else {
+                    // If the index is within the range of events
+                    int eventIndex = index -
+                        _todos.length -
+                        _meetings.length -
+                        _books.length; // Adjust index for events list
+                    return _buildListItem(
+                      title: _events[eventIndex].title,
+                      beginDate: _events[eventIndex].beginDate,
+                      endDate: _events[eventIndex].endDate,
+                      onUpdateDate:
+                          (DateTime newBeginDate, DateTime newEndDate) {
+                        setState(() {
+                          _events[eventIndex].beginDate = newBeginDate;
+                          _events[eventIndex].endDate = newEndDate;
+                        });
+                      },
+                    );
+                  }
+                },
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildListItem({
+    required String title,
+    required DateTime beginDate,
+    required DateTime endDate,
+    required void Function(DateTime, DateTime) onUpdateDate,
+  }) {
+    double _beginSliderValue = beginDate.millisecondsSinceEpoch.toDouble();
+    double _endSliderValue = endDate.millisecondsSinceEpoch.toDouble();
+
+    return Card(
+      elevation: 2.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            title: Text(title),
+            subtitle: Row(
+              children: [
+                Text('Begin Date: ${beginDate.toString().substring(0, 10)}'),
+                const SizedBox(width: 10),
+                Text('End Date: ${endDate.toString().substring(0, 10)}'),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: RangeSlider(
+              values: RangeValues(_beginSliderValue, _endSliderValue),
+              min: DateTime(2024).millisecondsSinceEpoch.toDouble(),
+              max: DateTime(2026).millisecondsSinceEpoch.toDouble(),
+              onChanged: (RangeValues values) {
+                onUpdateDate(
+                  DateTime.fromMillisecondsSinceEpoch(values.start.toInt()),
+                  DateTime.fromMillisecondsSinceEpoch(values.end.toInt()),
+                );
+              },
+              labels: RangeLabels(
+                DateFormat('dd-MM-yyyy').format(beginDate),
+                DateFormat('dd-MM-yyyy').format(endDate),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

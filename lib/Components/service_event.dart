@@ -8,8 +8,8 @@ class Event {
   final int eventId;
   final String domain;
   final String title;
-  final DateTime beginDate;
-  final DateTime endDate; // Add endDate property
+  DateTime beginDate;
+  DateTime endDate; // Add endDate property
   final String location;
   final String speaker;
   final String eventMode;
@@ -60,8 +60,8 @@ class _EventFormState extends State<EventForm> {
   void initState() {
     super.initState();
     _beginDate = DateTime.now();
-    _endDate = _beginDate
-        .add(const Duration(hours: 2)); // Default end date 2 hours after begin date
+    _endDate = _beginDate.add(
+        const Duration(hours: 2)); // Default end date 2 hours after begin date
   }
 
   @override

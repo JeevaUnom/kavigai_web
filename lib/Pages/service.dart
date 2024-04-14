@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import '../Components/Navbar.dart';
 import 'package:kavigai/Pages/ChatPage.dart'; // Import the ChatPage widget
-import '../Components/service_details.dart'; // Import service details
 
 class Todo {
   final String name;

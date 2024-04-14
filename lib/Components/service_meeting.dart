@@ -6,8 +6,8 @@ import 'package:http/http.dart' as http;
 
 class Meeting {
   final String title;
-  final DateTime beginDate;
-  final DateTime endDate;
+  DateTime beginDate;
+  DateTime endDate;
   final String description;
   final String status;
 

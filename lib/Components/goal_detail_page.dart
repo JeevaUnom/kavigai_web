@@ -411,6 +411,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     double _beginSliderValue = beginDate.millisecondsSinceEpoch.toDouble();
     double _endSliderValue = endDate.millisecondsSinceEpoch.toDouble();
 
+
     return Card(
       elevation: 2.0,
       child: Column(

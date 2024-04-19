@@ -57,6 +57,51 @@ class Book(db.Model):
     def __repr__(self):
         return f'<Book {self.id}: {self.title} by {self.author}>'
 
+class UserBook(db.Model):
+    __tablename__ = 'userbook'
+    __table_args__ = {'quote': True}  # Ensure that column names are quoted
+
+    bookId = db.Column('bookid', db.Integer, primary_key=True)
+    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False)
+    bookTitle = db.Column('booktitle', db.String(255), nullable=False)
+    bookAuthor = db.Column('bookauthor', db.String(255), nullable=False)
+    bookDescription = db.Column('bookdescription', db.Text, nullable=False)
+    bookPageCount = db.Column('bookpagecount', db.Integer, nullable=False)
+    bookGenre = db.Column('bookgenre', db.String(100), nullable=False)
+    bookBeginDate = db.Column('bookbegindate', db.Date, nullable=False)
+    bookEndDate = db.Column('bookenddate', db.Date, nullable=False)
+    bookStatus = db.Column('bookstatus', db.String(50), nullable=False)
+
+class Event(db.Model):
+    __tablename__ = 'event'
+    __table_args__ = {'quote': True}  # Ensure that column names are quoted
+
+    eventId = db.Column('eventid', db.Integer, primary_key=True)
+    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False)
+    eventTitle = db.Column('eventtitle', db.String(255), nullable=False)
+    eventDomain = db.Column('eventdomain', db.String(255), nullable=False)
+    eventDescription = db.Column('eventdescription', db.Text, nullable=False)
+    eventBeginDate = db.Column('eventbegindate', db.Date, nullable=False)
+    eventEndDate = db.Column('eventenddate', db.Date, nullable=False)
+    eventLocation = db.Column('eventlocation', db.String(255), nullable=False)
+    eventSpeaker = db.Column('eventspeaker', db.String(255), nullable=False)
+    eventMode = db.Column('eventmode', db.String(255), nullable=False)
+    eventStatus = db.Column('eventstatus', db.String(50), nullable=False)
+
+class Meeting(db.Model):
+    __tablename__ = 'meeting'
+
+    meetingId = db.Column('meetingid', db.Integer, primary_key=True)
+    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False)
+    meetingTitle = db.Column('meetingtitle', db.String(255), nullable=False)
+    meetingBeginDate = db.Column('meetingbegindate', db.DateTime, nullable=False)
+    meetingEndDate = db.Column('meetingenddate', db.DateTime, nullable=False)
+    meetingDescription = db.Column('meetingdescription', db.Text, nullable=False)
+    meetingStatus = db.Column('meetingstatus', db.String(50), nullable=False)
+
+    def __repr__(self):
+        return f'<Meeting {self.meetingId}: {self.meetingTitle}>'
+
 # Get all goals
 @app.route('/api/goals', methods=['GET'])
 def get_goals():
@@ -80,7 +125,7 @@ def get_goal(id):
     goal = Goals.query.get(id)
     if goal is None:
         return jsonify({'message': 'Goal not found'}), 404
-    
+
     return jsonify({
         'id': goal.id,
         'name': goal.name,
@@ -296,6 +341,342 @@ def delete_todo(todoId):
     db.session.commit()
 
     return jsonify({'message': 'Todo deleted successfully'}), 200
+
+# Get a single userBook by ID
+@app.route('/api/userBooks/<int:bookId>', methods=['GET'])
+def get_user_book(bookId):
+    user_book = UserBook.query.get(bookId)
+    if user_book is None:
+        return jsonify({'message': 'User Book not found'}), 404
+    
+    return jsonify({
+        'bookId': user_book.bookId,
+        'id': user_book.id,
+        'bookTitle': user_book.bookTitle,
+        'bookAuthor': user_book.bookAuthor,
+        'bookDescription': user_book.bookDescription,
+        'bookPageCount': user_book.bookPageCount,
+        'bookGenre': user_book.bookGenre,
+        'bookBeginDate': user_book.bookBeginDate.strftime('%Y-%m-%d'),
+        'bookEndDate': user_book.bookEndDate.strftime('%Y-%m-%d'),
+        'bookStatus': user_book.bookStatus
+    })
+
+# Route to create a new userBook
+@app.route('/api/userBooks', methods=['POST'])
+def create_user_book():
+    data = request.json
+    # Extract data from request
+    id = data.get('id')
+    bookTitle = data.get('bookTitle')
+    bookAuthor = data.get('bookAuthor')
+    bookDescription = data.get('bookDescription')
+    bookPageCount = data.get('bookPageCount')
+    bookGenre = data.get('bookGenre')
+    bookBeginDate_str = data.get('bookBeginDate')
+    bookEndDate_str = data.get('bookEndDate')
+    bookStatus = data.get('bookStatus')
+
+    # Validate data
+    if not all([id, bookTitle, bookAuthor, bookDescription, bookPageCount, bookGenre, bookBeginDate_str, bookEndDate_str, bookStatus]):
+        return jsonify({'message': 'All fields are required'}), 400
+
+    try:
+        # Convert dates to datetime objects
+        bookBeginDate = datetime.strptime(bookBeginDate_str, '%Y-%m-%d').date()
+        bookEndDate = datetime.strptime(bookEndDate_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'message': 'Invalid date format. Please use YYYY-MM-DD'}), 400
+
+    # Create new userBook object
+    user_book = UserBook(
+        id=id,
+        bookTitle=bookTitle,
+        bookAuthor=bookAuthor,
+        bookDescription=bookDescription,
+        bookPageCount=bookPageCount,
+        bookGenre=bookGenre,
+        bookBeginDate=bookBeginDate,
+        bookEndDate=bookEndDate,
+        bookStatus=bookStatus
+    )
+
+    # Add new userBook to database
+    db.session.add(user_book)
+    db.session.commit()
+
+    return jsonify({'message': 'User book created successfully'}), 201
+
+# Update an existing userBook
+@app.route('/api/userBooks/<int:bookId>', methods=['PUT'])
+def update_user_book(bookId):
+    data = request.json
+    # Get the existing userBook
+    user_book = UserBook.query.get(bookId)
+    if user_book is None:
+        return jsonify({'message': 'User Book not found'}), 404
+
+    # Update the userBook properties
+    user_book.id = data.get('id', user_book.id)
+    user_book.bookTitle = data.get('bookTitle', user_book.bookTitle)
+    user_book.bookAuthor = data.get('bookAuthor', user_book.bookAuthor)
+    user_book.bookDescription = data.get('bookDescription', user_book.bookDescription)
+    user_book.bookPageCount = data.get('bookPageCount', user_book.bookPageCount)
+    user_book.bookGenre = data.get('bookGenre', user_book.bookGenre)
+    user_book.bookBeginDate = datetime.strptime(data.get('bookBeginDate', str(user_book.bookBeginDate)), '%Y-%m-%d').date()
+    user_book.bookEndDate = datetime.strptime(data.get('bookEndDate', str(user_book.bookEndDate)), '%Y-%m-%d').date()
+    user_book.bookStatus = data.get('bookStatus', user_book.bookStatus)
+
+    # Commit changes to the database
+    db.session.commit()
+
+    return jsonify({'message': 'User Book updated successfully'}), 200
+
+# Delete an existing userBook
+@app.route('/api/userBooks/<int:bookId>', methods=['DELETE'])
+def delete_user_book(bookId):
+    # Get the userBook to delete
+    user_book = UserBook.query.get(bookId)
+    if user_book is None:
+        return jsonify({'message': 'User Book not found'}), 404
+
+    # Delete the userBook from the database
+    db.session.delete(user_book)
+    db.session.commit()
+
+    return jsonify({'message': 'User Book deleted successfully'}), 200
+
+# Get all events
+@app.route('/api/events', methods=['GET'])
+def get_events():
+    events = Event.query.all()
+    events_list = []
+    for event in events:
+        events_list.append({
+            'eventId': event.eventId,
+            'id': event.id,
+            'eventTitle': event.eventTitle,
+            'eventDomain': event.eventDomain,
+            'eventDescription': event.eventDescription,
+            'eventBeginDate': event.eventBeginDate.strftime('%Y-%m-%d'),
+            'eventEndDate': event.eventEndDate.strftime('%Y-%m-%d'),
+            'eventLocation': event.eventLocation,
+            'eventSpeaker': event.eventSpeaker,
+            'eventMode': event.eventMode,
+            'eventStatus': event.eventStatus
+        })
+    return jsonify({'events': events_list})
+# Get a single event by ID
+@app.route('/api/events/<int:eventId>', methods=['GET'])
+def get_event(eventId):
+    event = Event.query.get(eventId)
+    if event is None:
+        return jsonify({'message': 'Event not found'}), 404
+    
+    return jsonify({
+        'eventId': event.eventId,
+        'id': event.id,
+        'eventTitle': event.eventTitle,
+        'eventDomain': event.eventDomain,
+        'eventDescription': event.eventDescription,
+        'eventBeginDate': event.eventBeginDate.strftime('%Y-%m-%d'),
+        'eventEndDate': event.eventEndDate.strftime('%Y-%m-%d'),
+        'eventLocation': event.eventLocation,
+        'eventSpeaker': event.eventSpeaker,
+        'eventMode': event.eventMode,
+        'eventStatus': event.eventStatus
+    })
+
+# Create a new event
+@app.route('/api/events', methods=['POST'])
+def create_event():
+    data = request.json
+    # Extract data from request
+    id = data.get('id')
+    eventTitle = data.get('eventTitle')
+    eventDomain = data.get('eventDomain')
+    eventDescription = data.get('eventDescription')
+    eventBeginDate_str = data.get('eventBeginDate')
+    eventEndDate_str = data.get('eventEndDate')
+    eventLocation = data.get('eventLocation')
+    eventSpeaker = data.get('eventSpeaker')
+    eventMode = data.get('eventMode')
+    eventStatus = data.get('eventStatus')
+
+    # Validate data
+    if not all([id, eventTitle, eventDomain, eventDescription, eventBeginDate_str, eventEndDate_str, eventLocation, eventSpeaker, eventMode, eventStatus]):
+        return jsonify({'message': 'All fields are required'}), 400
+
+    try:
+        # Convert dates to datetime objects
+        eventBeginDate = datetime.strptime(eventBeginDate_str, '%Y-%m-%d').date()
+        eventEndDate = datetime.strptime(eventEndDate_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'message': 'Invalid date format. Please use YYYY-MM-DD'}), 400
+
+    # Create new event object
+    event = Event(
+        id=id,
+        eventTitle=eventTitle,
+        eventDomain=eventDomain,
+        eventDescription=eventDescription,
+        eventBeginDate=eventBeginDate,
+        eventEndDate=eventEndDate,
+        eventLocation=eventLocation,
+        eventSpeaker=eventSpeaker,
+        eventMode=eventMode,
+        eventStatus=eventStatus
+    )
+
+    # Add new event to database
+    db.session.add(event)
+    db.session.commit()
+
+    return jsonify({'message': 'Event created successfully'}), 201
+
+# Update an existing event
+@app.route('/api/events/<int:eventId>', methods=['PUT'])
+def update_event(eventId):
+    data = request.json
+    # Get the existing event
+    event = Event.query.get(eventId)
+    if event is None:
+        return jsonify({'message': 'Event not found'}), 404
+
+    # Update the event properties
+    event.id = data.get('id', event.id)
+    event.eventTitle = data.get('eventTitle', event.eventTitle)
+    event.eventDomain = data.get('eventDomain', event.eventDomain)
+    event.eventDescription = data.get('eventDescription', event.eventDescription)
+    event.eventBeginDate = datetime.strptime(data.get('eventBeginDate', str(event.eventBeginDate)), '%Y-%m-%d').date()
+    event.eventEndDate = datetime.strptime(data.get('eventEndDate', str(event.eventEndDate)), '%Y-%m-%d').date()
+    event.eventLocation = data.get('eventLocation', event.eventLocation)
+    event.eventSpeaker = data.get('eventSpeaker', event.eventSpeaker)
+    event.eventMode = data.get('eventMode', event.eventMode)
+    event.eventStatus = data.get('eventStatus', event.eventStatus)
+
+    # Commit changes to the database
+    db.session.commit()
+
+    return jsonify({'message': 'Event updated successfully'}), 200
+
+# Delete an existing event
+@app.route('/api/events/<int:eventId>', methods=['DELETE'])
+def delete_event(eventId):
+    # Get the event to delete
+    event = Event.query.get(eventId)
+    if event is None:
+        return jsonify({'message': 'Event not found'}), 404
+
+    # Delete the event from the database
+    db.session.delete(event)
+    db.session.commit()
+
+    return jsonify({'message': 'Event deleted successfully'}), 200
+
+# API endpoints for Meeting
+@app.route('/api/meetings', methods=['GET'])
+def get_meetings():
+    meetings = Meeting.query.all()
+    meetings_list = []
+    for meeting in meetings:
+        meetings_list.append({
+            'meetingId': meeting.meetingId,
+            'id': meeting.id,
+            'meetingTitle': meeting.meetingTitle,
+            'meetingBeginDate': meeting.meetingBeginDate.strftime('%Y-%m-%d %H:%M:%S'),
+            'meetingEndDate': meeting.meetingEndDate.strftime('%Y-%m-%d %H:%M:%S'),
+            'meetingDescription': meeting.meetingDescription,
+            'meetingStatus': meeting.meetingStatus
+        })
+    return jsonify({'meetings': meetings_list})
+
+@app.route('/api/meetings/<int:meetingId>', methods=['GET'])
+def get_meeting(meetingId):
+    meeting = Meeting.query.get(meetingId)
+    if meeting is None:
+        return jsonify({'message': 'Meeting not found'}), 404
+    
+    return jsonify({
+        'meetingId': meeting.meetingId,
+        'id': meeting.id,
+        'meetingTitle': meeting.meetingTitle,
+        'meetingBeginDate': meeting.meetingBeginDate.strftime('%Y-%m-%d %H:%M:%S'),
+        'meetingEndDate': meeting.meetingEndDate.strftime('%Y-%m-%d %H:%M:%S'),
+        'meetingDescription': meeting.meetingDescription,
+        'meetingStatus': meeting.meetingStatus
+    })
+
+@app.route('/api/meetings', methods=['POST'])
+def create_meeting():
+    data = request.json
+    # Extract data from request
+    meetingTitle = data.get('meetingTitle')
+    meetingBeginDate_str = data.get('meetingBeginDate')
+    meetingEndDate_str = data.get('meetingEndDate')
+    meetingDescription = data.get('meetingDescription')
+    meetingStatus = data.get('meetingStatus')
+
+    # Validate data
+    if not all([meetingTitle, meetingBeginDate_str, meetingEndDate_str, meetingDescription, meetingStatus]):
+        return jsonify({'message': 'All fields are required'}), 400
+
+    try:
+        # Convert dates to datetime objects
+        meetingBeginDate = datetime.strptime(meetingBeginDate_str, '%Y-%m-%d %H:%M:%S')
+        meetingEndDate = datetime.strptime(meetingEndDate_str, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        return jsonify({'message': 'Invalid date format. Please use YYYY-MM-DD HH:MM:SS'}), 400
+
+    # Create new meeting object
+    meeting = Meeting(
+        meetingTitle=meetingTitle,
+        meetingBeginDate=meetingBeginDate,
+        meetingEndDate=meetingEndDate,
+        meetingDescription=meetingDescription,
+        meetingStatus=meetingStatus,
+        id=data.get('id')
+    )
+
+    # Add new meeting to database
+    db.session.add(meeting)
+    db.session.commit()
+
+    return jsonify({'message': 'Meeting created successfully'}), 201
+
+@app.route('/api/meetings/<int:meetingId>', methods=['PUT'])
+def update_meeting(meetingId):
+    data = request.json
+    # Get the existing meeting
+    meeting = Meeting.query.get(meetingId)
+    if meeting is None:
+        return jsonify({'message': 'Meeting not found'}), 404
+
+    # Update the meeting properties
+    meeting.meetingTitle = data.get('meetingTitle', meeting.meetingTitle)
+    meeting.meetingBeginDate = datetime.strptime(data.get('meetingBeginDate', str(meeting.meetingBeginDate)), '%Y-%m-%d %H:%M:%S')
+    meeting.meetingEndDate = datetime.strptime(data.get('meetingEndDate', str(meeting.meetingEndDate)), '%Y-%m-%d %H:%M:%S')
+    meeting.meetingDescription = data.get('meetingDescription', meeting.meetingDescription)
+    meeting.meetingStatus = data.get('meetingStatus', meeting.meetingStatus)
+    meeting.id = data.get('id', meeting.id)
+
+    # Commit changes to the database
+    db.session.commit()
+
+    return jsonify({'message': 'Meeting updated successfully'}), 200
+
+@app.route('/api/meetings/<int:meetingId>', methods=['DELETE'])
+def delete_meeting(meetingId):
+    # Get the meeting to delete
+    meeting = Meeting.query.get(meetingId)
+    if meeting is None:
+        return jsonify({'message': 'Meeting not found'}), 404
+
+    # Delete the meeting from the database
+    db.session.delete(meeting)
+    db.session.commit()
+
+    return jsonify({'message': 'Meeting deleted successfully'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

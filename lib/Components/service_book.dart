@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, use_key_in_widget_constructors, prefer_final_fields, library_private_types_in_public_api, prefer_const_constructors, avoid_print
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;

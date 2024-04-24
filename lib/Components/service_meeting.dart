@@ -1,4 +1,4 @@
-// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api
+// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api, unused_field, avoid_print
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -36,8 +36,8 @@ class _MeetingFormState extends State<MeetingForm> {
   late DateTime _endDate;
   late String _description;
   late String _status;
-  TextEditingController _titleController = TextEditingController();
-  TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
@@ -279,7 +279,7 @@ class ExistingMeetingsDialog extends StatelessWidget {
       future: _fetchMeetings(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (snapshot.hasData) {
@@ -291,9 +291,9 @@ class ExistingMeetingsDialog extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Existing Meetings',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -309,7 +309,7 @@ class ExistingMeetingsDialog extends StatelessWidget {
                             'Begin: ${meetings[index].beginDate.toString().substring(0, 16)}\nEnd: ${meetings[index].endDate.toString().substring(0, 16)}',
                           ),
                           trailing: IconButton(
-                            icon: Icon(Icons.add),
+                            icon: const Icon(Icons.add),
                             onPressed: () {
                               onSelect(meetings[index]);
                               // Navigator.pop(

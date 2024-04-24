@@ -1,4 +1,4 @@
-// ignore_for_file: unused_import, avoid_print
+// ignore_for_file: unused_import, avoid_print, use_super_parameters, library_private_types_in_public_api, sized_box_for_whitespace, no_leading_underscores_for_local_identifiers
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -276,14 +276,14 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Service Details'),
+          title: const Text('Service Details'),
           content: Text('Details of service $title will be displayed here.'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Close'),
+              child: const Text('Close'),
             ),
           ],
         );
@@ -339,28 +339,28 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.edit),
+                      icon: const Icon(Icons.edit),
                       onPressed: () {
                         // Add update functionality
                       },
                     ),
-                    Text('Update'), // Icon label
+                    const Text('Update'), // Icon label
 
                     IconButton(
-                      icon: Icon(Icons.delete),
+                      icon: const Icon(Icons.delete),
                       onPressed: () {
                         // Add delete functionality
                       },
                     ),
-                    Text('Delete'), // Icon label
+                    const Text('Delete'), // Icon label
 
                     IconButton(
-                      icon: Icon(Icons.share),
+                      icon: const Icon(Icons.share),
                       onPressed: () {
                         // Add share functionality
                       },
                     ),
-                    Text('Share'), // Icon label
+                    const Text('Share'), // Icon label
                   ],
                 ),
               ],
@@ -499,11 +499,11 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
               children: [
                 Text(
                   '$index.',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Icon(iconData), // Display icon
 
                 // Display index number
@@ -515,25 +515,25 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: Icon(Icons.remove_red_eye),
+                  icon: const Icon(Icons.remove_red_eye),
                   onPressed: () {
                     _viewServiceDetails(
                         title); // Call function to view service details
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.edit),
+                  icon: const Icon(Icons.edit),
                   onPressed: () {
                     _editService(title); // Call function to edit service
                   },
                 ),
                 IconButton(
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                   onPressed: () {
                     _deleteService(title); // Call function to delete service
                   },
                 ),
-                Icon(Icons.drag_handle), // Add drag icon
+                const Icon(Icons.drag_handle), // Add drag icon
               ],
             ),
           ),
@@ -545,8 +545,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.calendar_today), // Calendar icon
-                    SizedBox(width: 8),
+                    const Icon(Icons.calendar_today), // Calendar icon
+                    const SizedBox(width: 8),
                     Text(' ${DateFormat('dd-MM-yyyy').format(beginDate)}'),
                   ],
                 ),
@@ -572,8 +572,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                 Row(
                   children: [
                     Text(' ${DateFormat('dd-MM-yyyy').format(endDate)}'),
-                    SizedBox(width: 8),
-                    Icon(Icons.calendar_today), // Calendar icon
+                    const SizedBox(width: 8),
+                    const Icon(Icons.calendar_today), // Calendar icon
                   ],
                 ),
               ],

@@ -1,11 +1,9 @@
-// ignore: file_names
-// ignore_for_file: prefer_const_constructors, use_key_in_widget_constructors, file_names, duplicate_ignore, unused_import
+// ignore_for_file: library_private_types_in_public_api, use_key_in_widget_constructors, file_names
 
 import 'package:flutter/material.dart';
-import 'package:kavigai/components/navbar.dart';
 
 class NavBar extends StatelessWidget {
-  const NavBar({super.key});
+  const NavBar({Key? key});
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +26,8 @@ class NavBar extends StatelessWidget {
           ),
 
           // Navigation links
-          Row(
-            children: const [
+          const Row(
+            children: [
               NavItem('Home', '/home'),
               SizedBox(width: 20.0),
               NavItem('Goal', '/goal'),
@@ -49,24 +47,48 @@ class NavBar extends StatelessWidget {
   }
 }
 
-class NavItem extends StatelessWidget {
+class NavItem extends StatefulWidget {
   final String title;
   final String route;
 
   const NavItem(this.title, this.route);
 
   @override
+  _NavItemState createState() => _NavItemState();
+}
+
+class _NavItemState extends State<NavItem> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: () {
-        Navigator.pushNamed(context, route);
+        Navigator.pushNamed(context, widget.route);
       },
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16.0,
-          fontWeight: FontWeight.bold,
+      onHover: (value) {
+        setState(() {
+          _isHovered = value;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: _isHovered ? Colors.white : Colors.transparent,
+              width: 2.0,
+            ),
+          ),
+        ),
+        child: Text(
+          widget.title,
+          style: TextStyle(
+            color: _isHovered ? Colors.white : Colors.white70,
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

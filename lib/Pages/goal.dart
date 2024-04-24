@@ -20,8 +20,8 @@ class _GoalPageState extends State<GoalPage> {
   final TextEditingController _goalDescriptionController =
       TextEditingController();
   final TextEditingController _urlController = TextEditingController();
-  DateTime? _beginDate;
-  DateTime? _endDate;
+  final DateTime _beginDate = DateTime.now();
+  final DateTime _endDate = DateTime.now().add(const Duration(days: 30));
   List<Goal> enteredGoals = [];
 
   @override
@@ -59,7 +59,7 @@ class _GoalPageState extends State<GoalPage> {
                 Expanded(
                   child: _buildDateField('Begin Date *', _beginDate, (date) {
                     setState(() {
-                      _beginDate = date;
+                      _beginDate;
                     });
                   }, context),
                 ),
@@ -67,7 +67,7 @@ class _GoalPageState extends State<GoalPage> {
                 Expanded(
                   child: _buildDateField('End Date *', _endDate, (date) {
                     setState(() {
-                      _endDate = date;
+                      _endDate;
                     });
                   }, context),
                 ),
@@ -156,16 +156,14 @@ class _GoalPageState extends State<GoalPage> {
     // ignore: avoid_print
     print('Submit button pressed');
     if (_goalNameController.text.isNotEmpty &&
-        _goalDescriptionController.text.isNotEmpty &&
-        _beginDate != null &&
-        _endDate != null) {
+        _goalDescriptionController.text.isNotEmpty) {
       final Map<String, dynamic> goalData = {
         'name': _goalNameController.text,
         'description': _goalDescriptionController.text,
         'begin_date': DateFormat('yyyy-MM-dd')
-            .format(_beginDate!), // Corrected key to snake_case
+            .format(_beginDate), // Corrected key to snake_case
         'end_date': DateFormat('yyyy-MM-dd')
-            .format(_endDate!), // Corrected key to snake_case
+            .format(_endDate), // Corrected key to snake_case
         'url': _urlController.text,
         'status': 'New', // You might want to add logic for status selection
       };
@@ -187,8 +185,8 @@ class _GoalPageState extends State<GoalPage> {
         final Goal newGoal = Goal(
           name: _goalNameController.text,
           description: _goalDescriptionController.text,
-          beginDate: DateFormat('yyyy-MM-dd').format(_beginDate!),
-          endDate: DateFormat('yyyy-MM-dd').format(_endDate!),
+          beginDate: DateFormat('yyyy-MM-dd').format(_beginDate),
+          endDate: DateFormat('yyyy-MM-dd').format(_endDate),
           url: _urlController.text,
           status: 'New',
         );
@@ -200,8 +198,8 @@ class _GoalPageState extends State<GoalPage> {
         _goalDescriptionController.clear();
         _urlController.clear();
         setState(() {
-          _beginDate = null;
-          _endDate = null;
+          _beginDate;
+          _endDate;
         });
       } else {
         // Failed to save to the database

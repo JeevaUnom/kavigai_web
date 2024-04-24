@@ -7,7 +7,6 @@ import 'package:kavigai/Pages/goal.dart';
 import 'package:kavigai/Pages/login.dart';
 import 'package:kavigai/Pages/mentor.dart';
 import 'package:kavigai/Pages/service.dart';
-//import 'package:kavigai/Components/ghant_chart.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,10 +29,9 @@ class MyApp extends StatelessWidget {
         '/service': (context) => ServicePage(),
         '/mentor': (context) => MentorPage(),
         '/profile': (context) => ProfilePage(
-              userName: '',
-              userEmail: '',
+            // userName: '',
+            // userEmail: '', photoUrl: '', firstName: '', lastName: '', mobileNumber: '', location: '', instagram: '', qualification: '', profession: '', city: '', linkedIn: '', state: '', country: '', pincode: '',
             ),
-        // '/chart': (context) => GanttChartPage(),
       },
     );
   }

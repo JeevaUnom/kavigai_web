@@ -1,4 +1,4 @@
-// ignore_for_file: library_private_types_in_public_api, unused_import
+// ignore_for_file: library_private_types_in_public_api, unused_import, use_super_parameters
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -44,24 +44,6 @@ class GoalPage extends StatefulWidget {
 class _GoalPageState extends State<GoalPage> {
   late Future<List<Goal>> _goalListFuture;
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _goalListFuture = _fetchGoalList();
-  // }
-
-  // Future<List<Goal>> _fetchGoalList() async {
-  //   final Uri url = Uri.parse('http://127.0.0.1:5000/api/goals');
-  //   final response = await http.get(url);
-
-  //   if (response.statusCode == 200) {
-  //     final List<dynamic> goalsJson = json.decode(response.body)['goals'];
-  //     return goalsJson.map((goalJson) => Goal.fromJson(goalJson)).toList();
-  //   } else {
-  //     throw Exception('Failed to fetch goal list');
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,49 +83,82 @@ class _GoalPageState extends State<GoalPage> {
 class GoalList extends StatelessWidget {
   final List<Goal> goals;
 
-  const GoalList({super.key, required this.goals});
+  const GoalList({Key? key, required this.goals}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: goals.map((goal) {
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  goal.name,
-                  style: const TextStyle(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
+      children: goals.asMap().entries.map((entry) {
+        final index = entry.key;
+        final goal = entry.value;
+
+        // Calculate the difference in days between begin date and end date
+        final beginDate = DateTime.parse(goal.beginDate);
+        final endDate = DateTime.parse(goal.endDate);
+        final differenceInDays = endDate.difference(beginDate).inDays;
+
+        // Adjust the text based on the difference in days
+        String targetDaysText;
+        if (differenceInDays == 0) {
+          targetDaysText = 'Single day';
+        } else if (differenceInDays == 1) {
+          targetDaysText = 'Single day';
+        } else {
+          targetDaysText = '$differenceInDays days';
+        }
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GoalDetailPage(goal: goal),
+              ),
+            );
+          },
+          child: Card(
+            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon(
+                  //   Icons.,
+                  //   // color: Colors.blue
+                  // ), // Icon representing the goal
+                  const SizedBox(width: 16.0),
+                  CircleAvatar(
+                    // backgroundColor: Colors.blue,
+                    child: Text(
+                      (index + 1).toString(),
+                      // style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${goal.beginDate} - ${goal.endDate}',
-                      style: const TextStyle(fontSize: 16.0),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => GoalDetailPage(goal: goal),
+                  const SizedBox(width: 16.0),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          goal.name,
+                          style: const TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
                           ),
-                        );
-                      },
-                      child: const Text('View Goal'),
+                        ),
+                        const SizedBox(height: 4.0),
+                        Text(
+                          '${goal.beginDate} - ${goal.endDate}  (Target: $targetDaysText)',
+                          style: const TextStyle(fontSize: 16.0),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  // Icon(Icons.arrow_forward_ios),
+                ],
+              ),
             ),
           ),
         );

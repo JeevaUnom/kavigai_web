@@ -16,6 +16,7 @@ void onToUpdateTargetDate(DateTime newDate, Function setState, TodoItem todo) {
   });
 }
 
+
 // void onReorder(
 //     int oldIndex, int newIndex, Function setState, List<TodoItem> todos) {
 //   if (oldIndex < newIndex) {

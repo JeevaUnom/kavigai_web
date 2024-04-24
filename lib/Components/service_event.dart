@@ -3,9 +3,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class Event {
-  final int eventId;
+  // final int eventId;
   final String domain;
   final String title;
   DateTime beginDate;
@@ -14,9 +15,10 @@ class Event {
   final String speaker;
   final String eventMode;
   final String description;
+  final String status;
 
   Event({
-    required this.eventId,
+    // required this.eventId,
     required this.domain,
     required this.title,
     required this.beginDate,
@@ -25,6 +27,7 @@ class Event {
     required this.speaker,
     required this.eventMode,
     required this.description,
+    required this.status,
   });
 }
 
@@ -47,6 +50,7 @@ class _EventFormState extends State<EventForm> {
   late String _speaker;
   late String _eventMode;
   late String _description;
+  late String _status;
   final TextEditingController _domainController = TextEditingController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _beginDateController = TextEditingController();
@@ -62,6 +66,7 @@ class _EventFormState extends State<EventForm> {
     _beginDate = DateTime.now();
     _endDate = _beginDate.add(
         const Duration(hours: 2)); // Default end date 2 hours after begin date
+    _status = 'New';
   }
 
   @override
@@ -75,6 +80,56 @@ class _EventFormState extends State<EventForm> {
     _eventModeController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveEvent() async {
+    if (_formKey.currentState!.validate()) {
+      final Event event = Event(
+        title: _titleController.text,
+        description: _descriptionController.text,
+        beginDate: _beginDate,
+        endDate: _endDate,
+        domain: _domainController.text,
+        location: _locationController.text,
+        speaker: _speakerController.text,
+        eventMode: _eventModeController.text,
+        status: _status,
+      );
+
+      final Uri url = Uri.parse('http://127.0.0.1:5000/api/events');
+      try {
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'eventTitle': event.title,
+            'eventDomain': event.domain,
+            'eventDescription': event.description,
+            'eventBeginDate':
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(event.beginDate),
+            'eventEndDate':
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(event.endDate),
+            'eventLocation': event.location,
+            'eventSpeaker': event.speaker,
+            'eventStatus': event.status,
+            'eventMode': event.eventMode,
+          }),
+        );
+        print('Request sent to server');
+
+        if (response.statusCode == 201) {
+          print("saved");
+        } else {
+          print("failed");
+        }
+      } catch (e) {
+        // print(e);
+        print('Error sending request: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -216,12 +271,32 @@ class _EventFormState extends State<EventForm> {
                 },
                 maxLines: 3,
               ),
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: _status,
+                onChanged: (newValue) {
+                  setState(() {
+                    _status = newValue!;
+                  });
+                },
+                items: ['New', 'In Progress', 'Completed', 'Optional']
+                    .map<DropdownMenuItem<String>>(
+                      (String value) => DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      ),
+                    )
+                    .toList(),
+                decoration: const InputDecoration(
+                  labelText: 'Status',
+                ),
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     Event event = Event(
-                      eventId: 0, // Set a default value for eventId
+                      // eventId: 0, // Set a default value for eventId
                       domain: _domainController.text,
                       title: _titleController.text,
                       beginDate: _beginDate,
@@ -230,8 +305,10 @@ class _EventFormState extends State<EventForm> {
                       speaker: _speakerController.text,
                       eventMode: _eventModeController.text,
                       description: _descriptionController.text,
+                      status: _status,
                     );
                     widget.onSave(event);
+                    _saveEvent();
                     // Navigator.pop(context);
                   }
                 },
@@ -251,27 +328,31 @@ class ExistingEventsDialog extends StatelessWidget {
   const ExistingEventsDialog({required this.onSelect});
 
   Future<List<Event>> _fetchEvents() async {
-    final response =
-        await http.get(Uri.parse('http://127.0.0.1:5000/api/events'));
-    if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body)['events'];
-      List<Event> events = data.map((item) {
-        return Event(
-          eventId: item['event_id'],
-          domain: item['domain'],
-          title: item['title'],
-          beginDate: DateTime.parse(item['begin_date']),
-          endDate:
-              DateTime.parse(item['end_date']), // Parse the end date as well
-          location: item['location'],
-          speaker: item['speaker'],
-          eventMode: item['event_mode'],
-          description: item['description'],
-        );
-      }).toList();
-      return events;
-    } else {
-      throw Exception('Failed to load events');
+    try {
+      final response =
+          await http.get(Uri.parse('http://127.0.0.1:5000/api/events'));
+      if (response.statusCode == 200) {
+        List<dynamic> data = jsonDecode(response.body)['events'];
+        List<Event> events = data.map((item) {
+          return Event(
+            // eventId: item['eventId'],
+            domain: item['eventDomain'],
+            title: item['eventTitle'],
+            beginDate: DateTime.parse(item['eventBeginDate']),
+            endDate: DateTime.parse(item['eventEndDate']),
+            location: item['eventLocation'],
+            speaker: item['eventSpeaker'],
+            eventMode: item['eventMode'],
+            description: item['eventDescription'],
+            status: item['eventStatus'],
+          );
+        }).toList();
+        return events;
+      } else {
+        throw Exception('Failed to load events');
+      }
+    } catch (error) {
+      throw Exception('Error fetching events: $error');
     }
   }
 
@@ -314,8 +395,8 @@ class ExistingEventsDialog extends StatelessWidget {
                             icon: const Icon(Icons.add),
                             onPressed: () {
                               onSelect(events[index]);
-                              Navigator.pop(
-                                  context); // Close the dialog after selecting event
+                              // Navigator.pop(
+                              //     context); // Close the dialog after selecting event
                             },
                           ),
                         );

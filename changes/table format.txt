@@ -1,0 +1,77 @@
+Widget _buildListItem({
+  required String title,
+  required DateTime beginDate,
+  required DateTime endDate,
+  required void Function(DateTime, DateTime) onUpdateDate,
+  required int index,
+  required IconData iconData,
+}) {
+  double _beginSliderValue = beginDate.millisecondsSinceEpoch.toDouble();
+  double _endSliderValue = endDate.millisecondsSinceEpoch.toDouble();
+
+  return Card(
+    elevation: 2.0,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DataTable(
+          columns: [
+            DataColumn(label: Text('Index')),
+            DataColumn(label: Text('Icon')),
+            DataColumn(label: Text('Title')),
+            DataColumn(label: Text('Begin Date')),
+            DataColumn(label: Text('Slider')),
+            DataColumn(label: Text('End Date')),
+            DataColumn(label: Text('Actions')),
+          ],
+          rows: [
+            DataRow(cells: [
+              DataCell(Text('$index')),
+              DataCell(Icon(iconData)),
+              DataCell(Text(title)),
+              DataCell(Text(DateFormat('dd-MM-yyyy').format(beginDate))),
+              DataCell(
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: RangeSlider(
+                    values: RangeValues(_beginSliderValue, _endSliderValue),
+                    min: DateTime(2024).millisecondsSinceEpoch.toDouble(),
+                    max: DateTime(2026).millisecondsSinceEpoch.toDouble(),
+                    onChanged: (RangeValues values) {
+                      onUpdateDate(
+                        DateTime.fromMillisecondsSinceEpoch(values.start.toInt()),
+                        DateTime.fromMillisecondsSinceEpoch(values.end.toInt()),
+                      );
+                    },
+                    labels: RangeLabels(
+                      DateFormat('dd-MM-yyyy').format(beginDate),
+                      DateFormat('dd-MM-yyyy').format(endDate),
+                    ),
+                  ),
+                ),
+              ),
+              DataCell(Text(DateFormat('dd-MM-yyyy').format(endDate))),
+              DataCell(Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () {
+                      // Handle edit action
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      // Handle delete action
+                    },
+                  ),
+                  Icon(Icons.drag_handle),
+                ],
+              )),
+            ]),
+          ],
+        ),
+      ],
+    ),
+  );
+}

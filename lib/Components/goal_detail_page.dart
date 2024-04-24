@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:kavigai/Components/Navbar.dart';
 import 'package:kavigai/Components/goal_list.dart';
+import 'package:kavigai/Components/service_todo.dart';
 // import '../pages/goal.dart'; // Import the Goal class
 import 'service_book.dart';
 import 'service_event.dart';
 import 'service_meeting.dart';
-import 'service_todo.dart'; // Import the recommendation list page
+// import 'service_todo.dort the recommendation list page
 
 class GoalDetailPage extends StatefulWidget {
   final Goal goal;
@@ -65,7 +66,19 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     });
   }
 
+  void _addExistingMeetingToList(Meeting meeting) {
+    setState(() {
+      _meetings.add(meeting);
+    });
+  }
+
   void _addEventToList(Event event) {
+    setState(() {
+      _events.add(event);
+    });
+  }
+
+  void _addExistingEventToList(Event event) {
     setState(() {
       _events.add(event);
     });
@@ -219,11 +232,27 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           // Handle action for selecting existing book
           // Implement opening book selection dialog
         } else if (selectedService == 'Meetings') {
-          // Handle action for selecting existing meeting
-          // Implement opening meeting selection dialog
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: ExistingMeetingsDialog(
+                  onSelect: _addExistingMeetingToList,
+                ),
+              );
+            },
+          );
         } else if (selectedService == 'Events') {
-          // Handle action for selecting existing event
-          // Implement opening event selection dialog
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return Dialog(
+                child: ExistingEventsDialog(
+                  onSelect: _addExistingEventToList,
+                ),
+              );
+            },
+          );
         } else {
           print('Action for $selectedService is not defined.');
         }
@@ -235,6 +264,50 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       default:
         print('Action for $selectedService is not defined.');
     }
+  }
+
+  void _viewServiceDetails(String title) {
+    // Implement functionality to view service details
+    print('Viewing details of service: $title');
+    // Here, you can open a dialog or navigate to a new page to show service details
+
+    // Example: Open a dialog to display service details
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Service Details'),
+          content: Text('Details of service $title will be displayed here.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _editService(String title) {
+    // Implement functionality to edit service
+    print('Editing service: $title');
+    // You can open a dialog or navigate to a new page to edit the service
+  }
+
+  void _deleteService(String title) {
+    // Implement functionality to delete service
+    print('Deleting service: $title');
+    // You can show a confirmation dialog and delete the service from the list
+    setState(() {
+      // Assuming _todos, _meetings, _books, and _events are lists holding your services
+      _todos.removeWhere((todo) => todo.name == title);
+      _meetings.removeWhere((meeting) => meeting.title == title);
+      _books.removeWhere((book) => book.title == title);
+      _events.removeWhere((event) => event.title == title);
+    });
   }
 
   @override
@@ -263,7 +336,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
+                Row(
                   children: [
                     IconButton(
                       icon: Icon(Icons.edit),
@@ -272,10 +345,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                       },
                     ),
                     Text('Update'), // Icon label
-                  ],
-                ),
-                Column(
-                  children: [
+
                     IconButton(
                       icon: Icon(Icons.delete),
                       onPressed: () {
@@ -283,10 +353,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                       },
                     ),
                     Text('Delete'), // Icon label
-                  ],
-                ),
-                Column(
-                  children: [
+
                     IconButton(
                       icon: Icon(Icons.share),
                       onPressed: () {
@@ -339,6 +406,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                           _todos[index].endDate = newEndDate;
                         });
                       },
+                      index: index + 1, // Adding 1 to make index start from 1
+                      iconData: Icons.task,
                     );
                   } else if (index < _todos.length + _meetings.length) {
                     // If the index is within the range of meetings
@@ -355,6 +424,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                           _meetings[meetingIndex].endDate = newEndDate;
                         });
                       },
+                      index: index + 1, // Adding 1 to make index start from 1
+                      iconData: Icons.people,
                     );
                   } else if (index <
                       _todos.length + _meetings.length + _books.length) {
@@ -373,6 +444,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                           _books[bookIndex].endDate = newEndDate;
                         });
                       },
+                      index: index + 1, // Adding 1 to make index start from 1
+                      iconData: Icons.menu_book_outlined,
                     );
                   } else {
                     // If the index is within the range of events
@@ -391,6 +464,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                           _events[eventIndex].endDate = newEndDate;
                         });
                       },
+                      index: index + 1, // Adding 1 to make index start from 1
+                      iconData: Icons.event_available,
                     );
                   }
                 },
@@ -407,10 +482,11 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     required DateTime beginDate,
     required DateTime endDate,
     required void Function(DateTime, DateTime) onUpdateDate,
+    required int index, // New parameter for index
+    required IconData iconData,
   }) {
     double _beginSliderValue = beginDate.millisecondsSinceEpoch.toDouble();
     double _endSliderValue = endDate.millisecondsSinceEpoch.toDouble();
-
 
     return Card(
       elevation: 2.0,
@@ -418,31 +494,89 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            title: Text(title),
-            subtitle: Row(
+            leading: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Begin Date: ${beginDate.toString().substring(0, 10)}'),
-                const SizedBox(width: 10),
-                Text('End Date: ${endDate.toString().substring(0, 10)}'),
+                Text(
+                  '$index.',
+                  style: TextStyle(
+                    fontSize: 20,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Icon(iconData), // Display icon
+
+                // Display index number
+              ],
+            ),
+            title: Text(title),
+            trailing: Row(
+              // Add icons on the right side
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.remove_red_eye),
+                  onPressed: () {
+                    _viewServiceDetails(
+                        title); // Call function to view service details
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () {
+                    _editService(title); // Call function to edit service
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    _deleteService(title); // Call function to delete service
+                  },
+                ),
+                Icon(Icons.drag_handle), // Add drag icon
               ],
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: RangeSlider(
-              values: RangeValues(_beginSliderValue, _endSliderValue),
-              min: DateTime(2024).millisecondsSinceEpoch.toDouble(),
-              max: DateTime(2026).millisecondsSinceEpoch.toDouble(),
-              onChanged: (RangeValues values) {
-                onUpdateDate(
-                  DateTime.fromMillisecondsSinceEpoch(values.start.toInt()),
-                  DateTime.fromMillisecondsSinceEpoch(values.end.toInt()),
-                );
-              },
-              labels: RangeLabels(
-                DateFormat('dd-MM-yyyy').format(beginDate),
-                DateFormat('dd-MM-yyyy').format(endDate),
-              ),
+            child: Row(
+              // Display begin and end dates at the start and end of the slider
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today), // Calendar icon
+                    SizedBox(width: 8),
+                    Text(' ${DateFormat('dd-MM-yyyy').format(beginDate)}'),
+                  ],
+                ),
+                Expanded(
+                  // padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: RangeSlider(
+                    values: RangeValues(_beginSliderValue, _endSliderValue),
+                    min: DateTime(2024).millisecondsSinceEpoch.toDouble(),
+                    max: DateTime(2026).millisecondsSinceEpoch.toDouble(),
+                    onChanged: (RangeValues values) {
+                      onUpdateDate(
+                        DateTime.fromMillisecondsSinceEpoch(
+                            values.start.toInt()),
+                        DateTime.fromMillisecondsSinceEpoch(values.end.toInt()),
+                      );
+                    },
+                    labels: RangeLabels(
+                      DateFormat('dd-MM-yyyy').format(beginDate),
+                      DateFormat('dd-MM-yyyy').format(endDate),
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(' ${DateFormat('dd-MM-yyyy').format(endDate)}'),
+                    SizedBox(width: 8),
+                    Icon(Icons.calendar_today), // Calendar icon
+                  ],
+                ),
+              ],
             ),
           ),
         ],

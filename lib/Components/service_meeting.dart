@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class Meeting {
   final String title;
@@ -51,6 +52,47 @@ class _MeetingFormState extends State<MeetingForm> {
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveMeeting() async {
+    if (_formKey.currentState!.validate()) {
+      final Meeting meeting = Meeting(
+        title: _titleController.text,
+        description: _descriptionController.text,
+        beginDate: _beginDate,
+        endDate: _endDate,
+        status: _status,
+      );
+
+      final Uri url = Uri.parse('http://127.0.0.1:5000/api/meetings');
+      try {
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'meetingTitle': meeting.title,
+            'meetingBeginDate':
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(meeting.beginDate),
+            'meetingEndDate':
+                DateFormat('yyyy-MM-dd HH:mm:ss').format(meeting.endDate),
+            'meetingDescription': meeting.description,
+            'meetingStatus': meeting.status,
+          }),
+        );
+        print('Request sent to server');
+
+        if (response.statusCode == 201) {
+          print("Meeting saved successfully");
+          // Add any further actions needed upon successful saving of meeting
+        } else {
+          print("Failed to save meeting: ${response.body}");
+          // Handle error or show appropriate message to the user
+        }
+      } catch (e) {
+        print('Error sending request: $e');
+        // Handle error or show appropriate message to the user
+      }
+    }
   }
 
   @override
@@ -191,6 +233,7 @@ class _MeetingFormState extends State<MeetingForm> {
                       status: _status,
                     );
                     widget.onSave(meeting);
+                    _saveMeeting();
                     // Navigator.pop(context);
                   }
                 },
@@ -217,11 +260,11 @@ class ExistingMeetingsDialog extends StatelessWidget {
       List<dynamic> data = jsonDecode(response.body)['meetings'];
       List<Meeting> meetings = data.map((item) {
         return Meeting(
-          title: item['title'],
-          beginDate: DateTime.parse(item['beginDate']),
-          endDate: DateTime.parse(item['endDate']),
-          description: item['description'],
-          status: item['status'],
+          title: item['meetingTitle'],
+          beginDate: DateTime.parse(item['meetingBeginDate']),
+          endDate: DateTime.parse(item['meetingEndDate']),
+          description: item['meetingDescription'],
+          status: item['meetingStatus'],
         );
       }).toList();
       return meetings;
@@ -269,8 +312,8 @@ class ExistingMeetingsDialog extends StatelessWidget {
                             icon: Icon(Icons.add),
                             onPressed: () {
                               onSelect(meetings[index]);
-                              Navigator.pop(
-                                  context); // Close the dialog after selecting meeting
+                              // Navigator.pop(
+                              //     context); // Close the dialog after selecting meeting
                             },
                           ),
                           // Other details...

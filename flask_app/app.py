@@ -35,7 +35,7 @@ class Todo(db.Model):
     todoBeginDate = db.Column('todobegindate', db.Date, nullable=False)
     todoEndDate = db.Column('todoenddate', db.Date, nullable=False)
     todoStatus = db.Column('todostatus', db.String(50))
-    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False)
+    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False, default=1)
 
     def __repr__(self):
         return f'<Todo {self.todoId}: {self.todoName}>'
@@ -62,7 +62,7 @@ class UserBook(db.Model):
     __table_args__ = {'quote': True}  # Ensure that column names are quoted
 
     bookId = db.Column('bookid', db.Integer, primary_key=True)
-    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False)
+    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False, default=1)
     bookTitle = db.Column('booktitle', db.String(255), nullable=False)
     bookAuthor = db.Column('bookauthor', db.String(255), nullable=False)
     bookDescription = db.Column('bookdescription', db.Text, nullable=False)
@@ -77,12 +77,12 @@ class Event(db.Model):
     __table_args__ = {'quote': True}  # Ensure that column names are quoted
 
     eventId = db.Column('eventid', db.Integer, primary_key=True)
-    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False)
+    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False, default=1)
     eventTitle = db.Column('eventtitle', db.String(255), nullable=False)
     eventDomain = db.Column('eventdomain', db.String(255), nullable=False)
     eventDescription = db.Column('eventdescription', db.Text, nullable=False)
-    eventBeginDate = db.Column('eventbegindate', db.Date, nullable=False)
-    eventEndDate = db.Column('eventenddate', db.Date, nullable=False)
+    eventBeginDate = db.Column('eventbegindate', db.DateTime, nullable=False)
+    eventEndDate = db.Column('eventenddate', db.DateTime, nullable=False)
     eventLocation = db.Column('eventlocation', db.String(255), nullable=False)
     eventSpeaker = db.Column('eventspeaker', db.String(255), nullable=False)
     eventMode = db.Column('eventmode', db.String(255), nullable=False)
@@ -92,7 +92,7 @@ class Meeting(db.Model):
     __tablename__ = 'meeting'
 
     meetingId = db.Column('meetingid', db.Integer, primary_key=True)
-    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False)
+    id = db.Column('id', db.Integer, db.ForeignKey('goals.id'), nullable=False, default=1)
     meetingTitle = db.Column('meetingtitle', db.String(255), nullable=False)
     meetingBeginDate = db.Column('meetingbegindate', db.DateTime, nullable=False)
     meetingEndDate = db.Column('meetingenddate', db.DateTime, nullable=False)
@@ -342,6 +342,32 @@ def delete_todo(todoId):
 
     return jsonify({'message': 'Todo deleted successfully'}), 200
 
+@app.route('/api/userBooks', methods=['GET'])
+def get_all_user_books():
+    user_books = UserBook.query.all()
+    if not user_books:
+        return jsonify({'message': 'No user books found'}), 404
+    
+    books_list = []
+    for user_book in user_books:
+        book_data = {
+            'bookId': user_book.bookId,
+            'id': user_book.id,
+            'bookTitle': user_book.bookTitle,
+            'bookAuthor': user_book.bookAuthor,
+            'bookDescription': user_book.bookDescription,
+            'bookPageCount': user_book.bookPageCount,
+            'bookGenre': user_book.bookGenre,
+            'bookBeginDate': user_book.bookBeginDate.strftime('%Y-%m-%d'),
+            'bookEndDate': user_book.bookEndDate.strftime('%Y-%m-%d'),
+            'bookStatus': user_book.bookStatus
+        }
+        books_list.append(book_data)
+    
+    return jsonify(books=books_list) 
+ 
+                   
+
 # Get a single userBook by ID
 @app.route('/api/userBooks/<int:bookId>', methods=['GET'])
 def get_user_book(bookId):
@@ -367,7 +393,7 @@ def get_user_book(bookId):
 def create_user_book():
     data = request.json
     # Extract data from request
-    id = data.get('id')
+    # id = data.get('id')
     bookTitle = data.get('bookTitle')
     bookAuthor = data.get('bookAuthor')
     bookDescription = data.get('bookDescription')
@@ -390,7 +416,7 @@ def create_user_book():
 
     # Create new userBook object
     user_book = UserBook(
-        id=id,
+        id=data.get('id'),
         bookTitle=bookTitle,
         bookAuthor=bookAuthor,
         bookDescription=bookDescription,
@@ -458,8 +484,8 @@ def get_events():
             'eventTitle': event.eventTitle,
             'eventDomain': event.eventDomain,
             'eventDescription': event.eventDescription,
-            'eventBeginDate': event.eventBeginDate.strftime('%Y-%m-%d'),
-            'eventEndDate': event.eventEndDate.strftime('%Y-%m-%d'),
+            'eventBeginDate': event.eventBeginDate.strftime('%Y-%m-%d %H:%M:%S'), 
+            'eventEndDate': event.eventEndDate.strftime('%Y-%m-%d %H:%M:%S'),
             'eventLocation': event.eventLocation,
             'eventSpeaker': event.eventSpeaker,
             'eventMode': event.eventMode,
@@ -479,8 +505,8 @@ def get_event(eventId):
         'eventTitle': event.eventTitle,
         'eventDomain': event.eventDomain,
         'eventDescription': event.eventDescription,
-        'eventBeginDate': event.eventBeginDate.strftime('%Y-%m-%d'),
-        'eventEndDate': event.eventEndDate.strftime('%Y-%m-%d'),
+        'eventBeginDate': event.eventBeginDate.strftime('%Y-%m-%d %H:%M:%S'),  # Format datetime
+        'eventEndDate': event.eventEndDate.strftime('%Y-%m-%d %H:%M:%S'),
         'eventLocation': event.eventLocation,
         'eventSpeaker': event.eventSpeaker,
         'eventMode': event.eventMode,
@@ -492,7 +518,7 @@ def get_event(eventId):
 def create_event():
     data = request.json
     # Extract data from request
-    id = data.get('id')
+    # id = data.get('id')
     eventTitle = data.get('eventTitle')
     eventDomain = data.get('eventDomain')
     eventDescription = data.get('eventDescription')
@@ -504,19 +530,19 @@ def create_event():
     eventStatus = data.get('eventStatus')
 
     # Validate data
-    if not all([id, eventTitle, eventDomain, eventDescription, eventBeginDate_str, eventEndDate_str, eventLocation, eventSpeaker, eventMode, eventStatus]):
+    if not all([ eventTitle, eventDomain, eventDescription, eventBeginDate_str, eventEndDate_str, eventLocation, eventSpeaker, eventMode, eventStatus]):
         return jsonify({'message': 'All fields are required'}), 400
 
     try:
         # Convert dates to datetime objects
-        eventBeginDate = datetime.strptime(eventBeginDate_str, '%Y-%m-%d').date()
-        eventEndDate = datetime.strptime(eventEndDate_str, '%Y-%m-%d').date()
+        eventBeginDate = datetime.strptime(eventBeginDate_str, '%Y-%m-%d %H:%M:%S')
+        eventEndDate = datetime.strptime(eventEndDate_str, '%Y-%m-%d %H:%M:%S')
     except ValueError:
         return jsonify({'message': 'Invalid date format. Please use YYYY-MM-DD'}), 400
 
     # Create new event object
     event = Event(
-        id=id,
+        id = 1,
         eventTitle=eventTitle,
         eventDomain=eventDomain,
         eventDescription=eventDescription,
@@ -548,8 +574,8 @@ def update_event(eventId):
     event.eventTitle = data.get('eventTitle', event.eventTitle)
     event.eventDomain = data.get('eventDomain', event.eventDomain)
     event.eventDescription = data.get('eventDescription', event.eventDescription)
-    event.eventBeginDate = datetime.strptime(data.get('eventBeginDate', str(event.eventBeginDate)), '%Y-%m-%d').date()
-    event.eventEndDate = datetime.strptime(data.get('eventEndDate', str(event.eventEndDate)), '%Y-%m-%d').date()
+    event.eventBeginDate = datetime.strptime(data.get('eventBeginDate', str(event.eventBeginDate)), '%Y-%m-%d %H:%M:%S')
+    event.eventEndDate = datetime.strptime(data.get('eventEndDate', str(event.eventEndDate)), '%Y-%m-%d %H:%M:%S')
     event.eventLocation = data.get('eventLocation', event.eventLocation)
     event.eventSpeaker = data.get('eventSpeaker', event.eventSpeaker)
     event.eventMode = data.get('eventMode', event.eventMode)

@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class Todo {
   final String name;
@@ -49,6 +50,63 @@ class _TodoFormState extends State<TodoForm> {
     _nameController.dispose();
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveTodo() async {
+    if (_formKey.currentState!.validate()) {
+      final Todo todo = Todo(
+        name: _nameController.text,
+        description: _descriptionController.text,
+        beginDate: _beginDate,
+        endDate: _endDate,
+        status: _status,
+      );
+
+      final Uri url = Uri.parse('http://127.0.0.1:5000/api/todos');
+      try {
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'todoName': todo.name,
+            'todoDescription': todo.description,
+            'todoBeginDate': DateFormat('yyyy-MM-dd').format(todo.beginDate),
+            'todoEndDate': DateFormat('yyyy-MM-dd').format(todo.endDate),
+            'todoStatus': todo.status,
+            'id': 1,
+          }),
+        );
+        print('Request sent to server');
+
+        if (response.statusCode == 201) {
+          // If the server returns a success status code
+          print(response);
+          // widget.onSave(todo);
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(content: Text('Todo saved successfully')),
+          // );
+          // // Clear form fields if needed
+          // _nameController.clear();
+          // _descriptionController.clear();
+          // // Optionally, update the state to reflect the new todo
+          // setState(() {
+          //   // Update state if needed
+          // });
+        } else {
+          // If the server returns an error status code
+          print(response);
+          // print('Failed to save todo: ${response.body}');
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(content: Text('Failed to save todo')),
+          // );
+        }
+      } catch (e) {
+        print('Error sending request: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -193,6 +251,7 @@ class _TodoFormState extends State<TodoForm> {
                       status: _status,
                     );
                     widget.onSave(todo);
+                    _saveTodo();
                     // Navigator.pop(context);
                   }
                 },

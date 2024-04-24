@@ -1,8 +1,7 @@
-// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class Book {
   final String title;
@@ -58,9 +57,9 @@ class _BookFormState extends State<BookForm> {
     super.initState();
     _status = 'New';
     _beginDate = DateTime.now();
-    _endDate = _beginDate!.add(Duration(days: 10));
-    _beginDateController.text = _beginDate!.toString().substring(0, 10);
-    _endDateController.text = _endDate!.toString().substring(0, 10);
+    _endDate = _beginDate.add(Duration(days: 10));
+    _beginDateController.text = _beginDate.toString().substring(0, 10);
+    _endDateController.text = _endDate.toString().substring(0, 10);
   }
 
   @override
@@ -86,12 +85,42 @@ class _BookFormState extends State<BookForm> {
       setState(() {
         if (isBeginDate) {
           _beginDate = picked;
-          _beginDateController.text = _beginDate!.toString().substring(0, 10);
+          _beginDateController.text = _beginDate.toString().substring(0, 10);
         } else {
           _endDate = picked;
-          _endDateController.text = _endDate!.toString().substring(0, 10);
+          _endDateController.text = _endDate.toString().substring(0, 10);
         }
       });
+    }
+  }
+
+  Future<void> _saveUserBook(Book book) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:5000/api/userBooks'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'bookTitle': book.title,
+          'bookAuthor': book.author,
+          'bookDescription': book.description,
+          'bookPageCount':
+              book.pageCount, // Ensure this matches the key in Flask
+          'bookGenre': book.genre,
+          'bookStatus': book.status,
+          'bookBeginDate': DateFormat('yyyy-MM-dd').format(book.beginDate),
+          'bookEndDate': DateFormat('yyyy-MM-dd').format(book.beginDate),
+          'id': 1,
+        }),
+      );
+
+      if (response.statusCode != 201) {
+        print(response);
+        throw Exception('Failed to add user book');
+      }
+    } catch (e) {
+      print('Failed to save user book: $e');
     }
   }
 
@@ -187,9 +216,6 @@ class _BookFormState extends State<BookForm> {
                       readOnly: true,
                       onTap: () => _selectDate(context, true),
                       validator: (value) {
-                        if (_beginDate == null) {
-                          return 'Please select begin date';
-                        }
                         return null;
                       },
                     ),
@@ -204,9 +230,6 @@ class _BookFormState extends State<BookForm> {
                       readOnly: true,
                       onTap: () => _selectDate(context, false),
                       validator: (value) {
-                        if (_endDate == null) {
-                          return 'Please select end date';
-                        }
                         return null;
                       },
                     ),
@@ -235,7 +258,7 @@ class _BookFormState extends State<BookForm> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
+                onPressed: ()  {
                   if (_formKey.currentState!.validate()) {
                     Book book = Book(
                       title: _titleController.text,
@@ -244,9 +267,10 @@ class _BookFormState extends State<BookForm> {
                       pageCount: int.parse(_pageCountController.text),
                       genre: _genreController.text,
                       status: _status,
-                      beginDate: _beginDate!,
-                      endDate: _endDate!,
+                      beginDate: _beginDate,
+                      endDate: _endDate,
                     );
+                    _saveUserBook(book);
                     widget.onSave(book);
                   }
                 },
@@ -268,23 +292,21 @@ class ExistingBooksDialog extends StatelessWidget {
   const ExistingBooksDialog({required this.onSelect});
   Future<List<Book>> _fetchBooks() async {
     final response =
-        await http.get(Uri.parse('http://127.0.0.1:5000/api/books'));
+        await http.get(Uri.parse('http://127.0.0.1:5000/api/userBooks'));
     if (response.statusCode == 200) {
       List<dynamic> data = jsonDecode(response.body)['books'];
       List<Book> books = data.map((item) {
-        // Assuming default values for beginDate and endDate
-        DateTime beginDate = DateTime.now();
-        DateTime endDate = DateTime.now();
-
         return Book(
-          title: item['title'],
-          author: item['author'],
-          description: item['description'],
-          pageCount: item['number_of_pages'],
-          genre: item['genre'],
-          status: item['ratings'].toString(),
-          beginDate: beginDate,
-          endDate: endDate,
+          title: item['bookTitle'], // Ensure consistency with Flask API key
+          author: item['bookAuthor'], // Ensure consistency with Flask API key
+          description:
+              item['bookDescription'], // Ensure consistency with Flask API key
+          pageCount:
+              item['bookPageCount'], // Ensure consistency with Flask API key
+          genre: item['bookGenre'], // Ensure consistency with Flask API key
+          status: item['bookStatus'], // Ensure consistency with Flask API key
+          beginDate: DateTime.parse(item['bookBeginDate']),
+          endDate: DateTime.parse(item['bookEndDate']),
         );
       }).toList();
       return books;

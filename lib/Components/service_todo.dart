@@ -81,24 +81,9 @@ class _TodoFormState extends State<TodoForm> {
         if (response.statusCode == 201) {
           // If the server returns a success status code
           print(response);
-          // widget.onSave(todo);
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   SnackBar(content: Text('Todo saved successfully')),
-          // );
-          // // Clear form fields if needed
-          // _nameController.clear();
-          // _descriptionController.clear();
-          // // Optionally, update the state to reflect the new todo
-          // setState(() {
-          //   // Update state if needed
-          // });
         } else {
           // If the server returns an error status code
           print(response);
-          // print('Failed to save todo: ${response.body}');
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   SnackBar(content: Text('Failed to save todo')),
-          // );
         }
       } catch (e) {
         print('Error sending request: $e');

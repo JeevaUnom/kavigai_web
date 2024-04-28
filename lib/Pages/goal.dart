@@ -20,8 +20,8 @@ class _GoalPageState extends State<GoalPage> {
   final TextEditingController _goalDescriptionController =
       TextEditingController();
   final TextEditingController _urlController = TextEditingController();
-  final DateTime _beginDate = DateTime.now();
-  final DateTime _endDate = DateTime.now().add(const Duration(days: 30));
+  DateTime _beginDate = DateTime.now();
+  DateTime _endDate = DateTime.now().add(const Duration(days: 30));
   List<Goal> enteredGoals = [];
 
   @override
@@ -38,79 +38,128 @@ class _GoalPageState extends State<GoalPage> {
           children: [
             const NavBar(),
             const SizedBox(height: 20.0),
-            TextFormField(
-              controller: _goalNameController,
-              decoration: const InputDecoration(
-                labelText: 'Goal Name *',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20.0),
-            TextFormField(
-              controller: _goalDescriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Goal Description *',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20.0),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDateField('Begin Date *', _beginDate, (date) {
-                    setState(() {
-                      _beginDate;
-                    });
-                  }, context),
-                ),
-                const SizedBox(width: 20.0),
-                Expanded(
-                  child: _buildDateField('End Date *', _endDate, (date) {
-                    setState(() {
-                      _endDate;
-                    });
-                  }, context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20.0),
-            TextFormField(
-              controller: _urlController,
-              decoration: const InputDecoration(
-                labelText: 'URL for Reference',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20.0),
-            DropdownButtonFormField<String>(
-              value: 'New', // Set the initial value to 'New'
-              decoration: const InputDecoration(
-                labelText: 'Status',
-                border: OutlineInputBorder(),
-              ),
-              items: ['New', 'Completed', 'In Progress']
-                  .map((status) => DropdownMenuItem(
-                        value: status,
-                        child: Text(status),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                // Handle status change if needed
-              },
-            ),
-            const SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: _handleSubmit,
-              child: const Text('Submit'),
-            ),
             if (enteredGoals
                 .isNotEmpty) // Only display if there are entered goals
               GoalList(goals: enteredGoals),
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showAddGoalDialog(context);
+        },
+        tooltip: 'Add Goal',
+        child: const Icon(Icons.add),
+      ),
     );
   }
+
+  void _showAddGoalDialog(BuildContext context) {
+    String? selectedStatus = 'New'; // Initialize the status with 'New'
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add New Goal'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _goalNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Goal Name *',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20.0),
+                TextFormField(
+                  controller: _goalDescriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Goal Description *',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20.0),
+                Row(
+                  children: [
+                    Expanded(
+                      child:
+                          _buildDateField('Begin Date *', _beginDate, (date) {
+                        setState(() {
+                          _beginDate = date ?? _beginDate;
+                        });
+                      }, context),
+                    ),
+                    const SizedBox(width: 20.0),
+                    Expanded(
+                      child: _buildDateField('End Date *', _endDate, (date) {
+                        setState(() {
+                          _endDate = date ?? _endDate;
+                        });
+                      }, context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20.0),
+                TextFormField(
+                  controller: _urlController,
+                  decoration: const InputDecoration(
+                    labelText: 'URL for Reference',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20.0),
+                DropdownButtonFormField<String>(
+                  value: selectedStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'Status',
+                    border: OutlineInputBorder(),
+                  ),
+                  items:
+                      ['New', 'In Progress', 'Completed'].map((String status) {
+                    return DropdownMenuItem<String>(
+                      value: status,
+                      child: Text(status),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    selectedStatus = newValue;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selectedStatus != null) {
+                  _handleSubmit(
+                      status:
+                          selectedStatus); // Pass the selected status to the submit handler
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+// void _handleSubmit({String status = 'New'}) {
+//   // Your existing submit logic here
+//   print('Submit button pressed with status: $status');
+//   // Additional logic to handle submission based on status
+// }
 
   Widget _buildDateField(String labelText, DateTime? selectedDate,
       Function(DateTime?) onChanged, BuildContext context) {
@@ -152,7 +201,7 @@ class _GoalPageState extends State<GoalPage> {
     }
   }
 
-  void _handleSubmit() async {
+  void _handleSubmit({String? status}) async {
     // ignore: avoid_print
     print('Submit button pressed');
     if (_goalNameController.text.isNotEmpty &&

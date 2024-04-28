@@ -6,12 +6,12 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 class Book {
-  final String title;
-  final String author;
-  final String description;
+  late final String title;
+  late final String author;
+  late final String description;
   final int pageCount;
   final String genre;
-  final String status;
+  late final String status;
   DateTime beginDate; // Added beginDate field
   DateTime endDate; // Added endDate field
 
@@ -260,7 +260,7 @@ class _BookFormState extends State<BookForm> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: ()  {
+                onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     Book book = Book(
                       title: _titleController.text,

@@ -10,7 +10,7 @@ class Event {
   final String domain;
   final String title;
   DateTime beginDate;
-  DateTime endDate; // Add endDate property
+  DateTime endDate; 
   final String location;
   final String speaker;
   final String eventMode;
